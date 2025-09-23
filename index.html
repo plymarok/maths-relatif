@@ -141,26 +141,17 @@
   </main>
 
   <script>
-    // Affiche la section demandée
     function showSection(id) {
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
     }
-
-    // Correction des QCM
     function checkAnswer(btn,isCorrect) {
-      btn.parentElement.querySelectorAll("button").forEach(b => {
-        b.disabled = true; // désactive après réponse
-      });
       if(isCorrect) {
         btn.classList.add("correct");
       } else {
         btn.classList.add("wrong");
       }
     }
-
-    // Au chargement, montrer directement "Comparaison"
-    window.onload = () => { showSection('comparaison'); }
   </script>
 </body>
 </html>
