@@ -12,13 +12,19 @@
       --success: #16a34a;
       --error: #dc2626;
       --text: #f1f5f9;
+      --choice-bg: #334155;
+      --choice-hover: #475569;
+      --explain: #fde047;
       --radius: 12px;
-      --shadow: 0 4px 10px rgba(0,0,0,0.5);
+      --shadow: 0 4px 10px rgba(0,0,0,0.6);
     }
     body.light {
       --bg: #f9fafb;
       --card: #ffffff;
       --text: #111827;
+      --choice-bg: #f1f5f9;
+      --choice-hover: #e2e8f0;
+      --explain: #444;
       --shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     body {
@@ -92,15 +98,16 @@
       display: block;
       width: 100%;
       margin: 5px 0;
-      padding: 8px;
+      padding: 10px;
       border-radius: var(--radius);
       border: 1px solid #ccc;
       cursor: pointer;
-      background: #334155;
-      color: white;
+      background: var(--choice-bg);
+      color: var(--text);
       font-size: 1rem;
+      transition: background 0.2s;
     }
-    body.light .choices button { background: #f1f5f9; color: black; }
+    .choices button:hover { background: var(--choice-hover); }
     .choices button.correct { background: var(--success) !important; color: white; }
     .choices button.wrong { background: var(--error) !important; color: white; }
     .refresh {
@@ -114,8 +121,7 @@
       font-size: 1rem;
       box-shadow: var(--shadow);
     }
-    .explain { margin-top: 10px; font-weight: bold; color: #facc15; }
-    body.light .explain { color: #444; }
+    .explain { margin-top: 10px; font-weight: bold; color: var(--explain); }
     /* Fractions jolies */
     .frac { display: inline-block; text-align: center; vertical-align: middle; }
     .frac .num { border-bottom: 1px solid black; display: block; }
@@ -138,8 +144,10 @@
       border-radius: var(--radius);
       border: none;
       cursor: pointer;
-      background: #e2e8f0;
+      background: #475569;
+      color: white;
     }
+    body.light #calcButtons button { background: #e2e8f0; color: black; }
   </style>
 </head>
 <body>
@@ -215,7 +223,7 @@
   </main>
 
   <script>
-    // === THEME TOGGLE ===
+    // THEME
     const toggleBtn=document.getElementById("toggleTheme");
     toggleBtn.onclick=()=>{
       document.body.classList.toggle("light");
@@ -279,7 +287,7 @@
       });
     }
 
-    // === Comparaison ===
+    // Comparaison
     function newComparison(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let a = formatNumber(type);
@@ -291,7 +299,7 @@
       makeChoices(document.getElementById("compChoices"),correct,[a,b].filter(x=>x!==correct),"compExplain",exp);
     }
 
-    // === Valeur absolue & opposé ===
+    // Valeur absolue & opposé
     function newValAbs(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let n = formatNumber(type);
@@ -308,7 +316,7 @@
       }
     }
 
-    // === Addition ===
+    // Addition
     function newAddition(){
       let n=randInt(3,5);
       let terms=[];
@@ -316,11 +324,11 @@
       let expr=terms.join(" + ");
       let res = terms.map(evalFrac).reduce((a,b)=>a+b,0).toFixed(2);
       document.getElementById("addQ").innerHTML=`Calcule : ${expr}`;
-      let exp=`On additionne tous les termes : ${terms.map(evalFrac).join(" + ")} = ${res}`;
+      let exp=`On additionne : ${terms.map(evalFrac).join(" + ")} = ${res}`;
       makeChoices(document.getElementById("addChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"addExplain",exp);
     }
 
-    // === Soustraction ===
+    // Soustraction
     function newSubtraction(){
       let n=randInt(3,5);
       let terms=[];
@@ -334,7 +342,7 @@
       makeChoices(document.getElementById("subChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"subExplain",exp);
     }
 
-    // === Multiplication ===
+    // Multiplication
     function newMultiplication(){
       let n = randInt(2,3);
       let terms=[];
@@ -342,22 +350,22 @@
       let expr=terms.join(" × ");
       let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
       document.getElementById("multQ").innerHTML=`Calcule : ${expr}`;
-      let exp=`On applique la règle du signe. Exemple : ${terms.map(evalFrac).join(" × ")} = ${res}`;
+      let exp=`On applique la règle du signe : ${terms.map(evalFrac).join(" × ")} = ${res}`;
       makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
 
-    // === Division ===
+    // Division
     function newDivision(){
       let a=formatNumber(["int","dec","frac"][randInt(0,2)]);
       let b=formatNumber(["int","dec","frac"][randInt(0,2)]);
       while(evalFrac(b)===0) b=formatNumber("int");
       let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
       document.getElementById("divQ").innerHTML=`Calcule : ${a} ÷ ${b}`;
-      let exp=`On applique la règle du signe. Exemple : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
+      let exp=`On applique la règle du signe : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
       makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
-    // === Calculatrice ===
+    // Calculatrice
     function createCalculator(){
       let buttons=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
       let container=document.getElementById("calcButtons");
