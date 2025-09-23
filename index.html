@@ -52,9 +52,7 @@
       margin: 20px auto;
       gap: 20px;
     }
-    .content {
-      flex: 2;
-    }
+    .content { flex: 2; }
     .calculator {
       flex: 1;
       background: var(--card);
@@ -70,11 +68,7 @@
       box-shadow: var(--shadow);
       margin-bottom: 20px;
     }
-    .question {
-      margin-bottom: 12px;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
+    .question { margin-bottom: 12px; font-weight: bold; font-size: 1.1rem; }
     .choices button {
       display: block;
       width: 100%;
@@ -99,16 +93,12 @@
       font-size: 1rem;
       box-shadow: var(--shadow);
     }
-    .explain {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #444;
-    }
-    /* Styles fractions */
-    .frac { display: inline-block; text-align: center; }
-    .frac sup { display: block; }
-    .frac sub { display: block; border-top: 1px solid black; }
-    /* Styles calculatrice */
+    .explain { margin-top: 10px; font-weight: bold; color: #444; }
+    /* Styles fractions jolies */
+    .frac { display: inline-block; text-align: center; vertical-align: middle; }
+    .frac .num { border-bottom: 1px solid black; display: block; }
+    .frac .den { display: block; }
+    /* Calculatrice */
     #calcDisplay {
       width: 100%;
       font-size: 1.4rem;
@@ -210,19 +200,19 @@
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
     function formatNumber(type){
-      if(type==="int") return randInt(-20,20);
+      if(type==="int") return randInt(-20,20).toString();
       if(type==="dec") return (Math.round((Math.random()*20-10)*10)/10).toFixed(1);
       if(type==="frac"){
         let num=randInt(-9,9); if(num===0) num=1;
         let den=[2,4,5,10][randInt(0,3)];
-        return `<span class="frac"><sup>${num}</sup><sub>${den}</sub></span>`;
+        return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
       }
     }
 
     function evalFrac(str){
       if(str.includes("frac")){
-        let num=parseFloat(str.match(/<sup>(.*?)<\/sup>/)[1]);
-        let den=parseFloat(str.match(/<sub>(.*?)<\/sub>/)[1]);
+        let num=parseFloat(str.match(/<span class="num">(.*?)<\/span>/)[1]);
+        let den=parseFloat(str.match(/<span class="den">(.*?)<\/span>/)[1]);
         return num/den;
       }
       return parseFloat(str);
@@ -257,7 +247,7 @@
       while(evalFrac(a)===evalFrac(b)) b=formatNumber(type);
       document.getElementById("compQ").innerHTML=`Quel est le plus grand entre ${a} et ${b} ?`;
       let correct = evalFrac(a)>evalFrac(b)?a:b;
-      let exp = `${a} = ${evalFrac(a)}, ${b} = ${evalFrac(b)} → ${correct} est plus grand.`;
+      let exp = `${evalFrac(a)} comparé à ${evalFrac(b)} → ${correct} est le plus grand.`;
       makeChoices(document.getElementById("compChoices"),correct,[a,b].filter(x=>x!==correct),"compExplain",exp);
     }
 
@@ -273,7 +263,7 @@
       } else {
         document.getElementById("valQ").innerHTML=`Opposé de ${n} ?`;
         let correct = (-evalFrac(n)).toString();
-        let exp = `Opposé de ${evalFrac(n)} = ${correct}.`;
+        let exp = `Opposé de ${evalFrac(n)} = ${correct}`;
         makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],"valExplain",exp);
       }
     }
@@ -284,7 +274,7 @@
       let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let res = (evalFrac(a)+evalFrac(b)).toFixed(2);
       document.getElementById("addQ").innerHTML=`Calcule : ${a} + ${b}`;
-      let exp=`On additionne : ${evalFrac(a)} + ${evalFrac(b)} = ${res}`;
+      let exp=`On additionne ${evalFrac(a)} et ${evalFrac(b)} → ${res}`;
       makeChoices(document.getElementById("addChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"addExplain",exp);
     }
 
@@ -306,7 +296,7 @@
       let expr=terms.join(" × ");
       let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
       document.getElementById("multQ").innerHTML=`Calcule : ${expr}`;
-      let exp=`Règle du signe : ${terms.filter(t=>evalFrac(t)<0).length} négatifs → produit ${res>=0?"positif":"négatif"}.`;
+      let exp=`Produit : ${terms.map(evalFrac).join(" × ")} = ${res}`;
       makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
 
@@ -317,7 +307,7 @@
       while(evalFrac(b)===0) b=formatNumber("int");
       let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
       document.getElementById("divQ").innerHTML=`Calcule : ${a} ÷ ${b}`;
-      let exp=`Règle du signe : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
+      let exp=`On applique la règle du signe : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
       makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
