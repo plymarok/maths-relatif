@@ -1,1 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nombres relatifs — Révisions</title>
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --accent: #2563eb;
+      --success: #16a34a;
+      --error: #dc2626;
+      --text: #111827;
+      --radius: 12px;
+      --shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--accent);
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      padding: 10px;
+      flex-wrap: wrap;
+    }
+    nav button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      box-shadow: var(--shadow);
+    }
+    main {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 15px;
+    }
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .question {
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+    .choices button {
+      display: block;
+      width: 100%;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: var(--radius);
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #f1f5f9;
+    }
+    .choices button.correct { background: var(--success); color: white; }
+    .choices button.wrong { background: var(--error); color: white; }
+  </style>
+</head>
+<body>
+  <header>📘 Révisions — Les nombres relatifs</header>
+  <nav>
+    <button onclick="showSection('comparaison')">Comparer</button>
+    <button onclick="showSection('addition')">Addition</button>
+    <button onclick="showSection('soustraction')">Soustraction</button>
+    <button onclick="showSection('multiplication')">Multiplication</button>
+  </nav>
+
+  <main>
+    <!-- Section Comparaison -->
+    <section id="comparaison" class="card">
+      <h2>Comparer des nombres relatifs</h2>
+      <p>Plus un nombre est <b>loin de zéro</b> du côté négatif, plus il est petit. Exemple : -5 &lt; -2 &lt; 0 &lt; 3.</p>
+      <div class="question">Quel est le plus grand nombre ?</div>
+      <div class="choices">
+        <button onclick="checkAnswer(this,false)">-12</button>
+        <button onclick="checkAnswer(this,true)">-3</button>
+        <button onclick="checkAnswer(this,false)">-25</button>
+      </div>
+    </section>
+
+    <!-- Section Addition -->
+    <section id="addition" class="card" style="display:none;">
+      <h2>Addition de relatifs</h2>
+      <p>➕ Même signe : on additionne les distances et on garde le signe.<br>
+         ➕ Signes différents : on soustrait les distances et on garde le signe du plus grand.</p>
+      <div class="question">Calcule : (-7) + (-5)</div>
+      <div class="choices">
+        <button onclick="checkAnswer(this,true)">-12</button>
+        <button onclick="checkAnswer(this,false)">+2</button>
+        <button onclick="checkAnswer(this,false)">+12</button>
+      </div>
+    </section>
+
+    <!-- Section Soustraction -->
+    <section id="soustraction" class="card" style="display:none;">
+      <h2>Soustraction de relatifs</h2>
+      <p>Soustraire un nombre relatif revient à <b>ajouter son opposé</b>.</p>
+      <div class="question">Calcule : (-8) - (-3)</div>
+      <div class="choices">
+        <button onclick="checkAnswer(this,false)">-11</button>
+        <button onclick="checkAnswer(this,true)">-5</button>
+        <button onclick="checkAnswer(this,false)">+11</button>
+      </div>
+    </section>
+
+    <!-- Section Multiplication -->
+    <section id="multiplication" class="card" style="display:none;">
+      <h2>Multiplication de relatifs</h2>
+      <p>✖ Deux nombres de même signe → positif.<br>
+         ✖ Deux nombres de signes contraires → négatif.<br>
+         ✖ Avec plusieurs facteurs :<br>
+         - Si le nombre de négatifs est pair → produit positif.<br>
+         - Si impair → produit négatif.</p>
+      <div class="question">Calcule : (-2) × (-3) × (+5)</div>
+      <div class="choices">
+        <button onclick="checkAnswer(this,true)">+30</button>
+        <button onclick="checkAnswer(this,false)">-30</button>
+        <button onclick="checkAnswer(this,false)">-10</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+    function checkAnswer(btn,isCorrect) {
+      if(isCorrect) {
+        btn.classList.add("correct");
+      } else {
+        btn.classList.add("wrong");
+      }
+    }
+  </script>
+</body>
+</html>
 
