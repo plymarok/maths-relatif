@@ -6,13 +6,19 @@
   <title>Nombres relatifs — Révisions interactives</title>
   <style>
     :root {
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --accent: #2563eb;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #3b82f6;
       --success: #16a34a;
       --error: #dc2626;
-      --text: #111827;
+      --text: #f1f5f9;
       --radius: 12px;
+      --shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    body.light {
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #111827;
       --shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     body {
@@ -28,6 +34,19 @@
       padding: 15px;
       font-size: 1.4rem;
       font-weight: bold;
+      position: relative;
+    }
+    #toggleTheme {
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 5px 10px;
     }
     nav {
       display: flex;
@@ -77,11 +96,13 @@
       border-radius: var(--radius);
       border: 1px solid #ccc;
       cursor: pointer;
-      background: #f1f5f9;
+      background: #334155;
+      color: white;
       font-size: 1rem;
     }
-    .choices button.correct { background: var(--success); color: white; }
-    .choices button.wrong { background: var(--error); color: white; }
+    body.light .choices button { background: #f1f5f9; color: black; }
+    .choices button.correct { background: var(--success) !important; color: white; }
+    .choices button.wrong { background: var(--error) !important; color: white; }
     .refresh {
       margin-top: 15px;
       padding: 8px 15px;
@@ -93,8 +114,9 @@
       font-size: 1rem;
       box-shadow: var(--shadow);
     }
-    .explain { margin-top: 10px; font-weight: bold; color: #444; }
-    /* Styles fractions jolies */
+    .explain { margin-top: 10px; font-weight: bold; color: #facc15; }
+    body.light .explain { color: #444; }
+    /* Fractions jolies */
     .frac { display: inline-block; text-align: center; vertical-align: middle; }
     .frac .num { border-bottom: 1px solid black; display: block; }
     .frac .den { display: block; }
@@ -121,7 +143,10 @@
   </style>
 </head>
 <body>
-  <header>📘 Révisions — Les nombres relatifs</header>
+  <header>
+    📘 Révisions — Les nombres relatifs
+    <button id="toggleTheme">🌙</button>
+  </header>
   <nav>
     <button onclick="showSection('comparaison')">Comparer</button>
     <button onclick="showSection('valabs')">Valeur absolue & Opposé</button>
@@ -132,7 +157,6 @@
   </nav>
 
   <main>
-    <!-- Zone exercices -->
     <div class="content">
       <section id="comparaison" class="card">
         <h2>Comparer des nombres relatifs</h2>
@@ -183,7 +207,6 @@
       </section>
     </div>
 
-    <!-- Calculatrice -->
     <div class="calculator">
       <h2>🧮 Calculatrice</h2>
       <input type="text" id="calcDisplay" disabled>
@@ -192,6 +215,13 @@
   </main>
 
   <script>
+    // === THEME TOGGLE ===
+    const toggleBtn=document.getElementById("toggleTheme");
+    toggleBtn.onclick=()=>{
+      document.body.classList.toggle("light");
+      toggleBtn.textContent=document.body.classList.contains("light")?"☀️":"🌙";
+    };
+
     function showSection(id) {
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
@@ -200,13 +230,23 @@
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
     function formatNumber(type){
-      if(type==="int") return randInt(-20,20).toString();
-      if(type==="dec") return (Math.round((Math.random()*20-10)*10)/10).toFixed(1);
+      let n;
+      if(type==="int"){ n=randInt(-20,20); }
+      if(type==="dec"){ n=(Math.round((Math.random()*20-10)*10)/10); }
       if(type==="frac"){
         let num=randInt(-9,9); if(num===0) num=1;
         let den=[2,4,5,10][randInt(0,3)];
-        return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+        n={frac:true,num,den};
       }
+      return renderNumber(n);
+    }
+
+    function renderNumber(n){
+      if(typeof n==="object" && n.frac){
+        return `<span class="frac"><span class="num">${n.num}</span><span class="den">${n.den}</span></span>`;
+      }
+      if(n<0) return `(${n})`;
+      return `${n}`;
     }
 
     function evalFrac(str){
@@ -215,7 +255,7 @@
         let den=parseFloat(str.match(/<span class="den">(.*?)<\/span>/)[1]);
         return num/den;
       }
-      return parseFloat(str);
+      return parseFloat(str.replace(/[()]/g,""));
     }
 
     function makeChoices(container, correct, wrongs, explainId, explanation) {
@@ -270,21 +310,27 @@
 
     // === Addition ===
     function newAddition(){
-      let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
-      let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
-      let res = (evalFrac(a)+evalFrac(b)).toFixed(2);
-      document.getElementById("addQ").innerHTML=`Calcule : ${a} + ${b}`;
-      let exp=`On additionne ${evalFrac(a)} et ${evalFrac(b)} → ${res}`;
+      let n=randInt(3,5);
+      let terms=[];
+      for(let i=0;i<n;i++) terms.push(formatNumber(["int","dec","frac"][randInt(0,2)]));
+      let expr=terms.join(" + ");
+      let res = terms.map(evalFrac).reduce((a,b)=>a+b,0).toFixed(2);
+      document.getElementById("addQ").innerHTML=`Calcule : ${expr}`;
+      let exp=`On additionne tous les termes : ${terms.map(evalFrac).join(" + ")} = ${res}`;
       makeChoices(document.getElementById("addChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"addExplain",exp);
     }
 
     // === Soustraction ===
     function newSubtraction(){
-      let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
-      let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
-      let res = (evalFrac(a)-evalFrac(b)).toFixed(2);
-      document.getElementById("subQ").innerHTML=`Calcule : ${a} - ${b}`;
-      let exp=`Soustraire = ajouter l’opposé → ${evalFrac(a)} - (${evalFrac(b)}) = ${res}`;
+      let n=randInt(3,5);
+      let terms=[];
+      for(let i=0;i<n;i++) terms.push(formatNumber(["int","dec","frac"][randInt(0,2)]));
+      let expr=terms.join(" - ");
+      let val=evalFrac(terms[0]);
+      for(let i=1;i<terms.length;i++){ val-=evalFrac(terms[i]); }
+      let res=val.toFixed(2);
+      document.getElementById("subQ").innerHTML=`Calcule : ${expr}`;
+      let exp=`Soustraire = ajouter l’opposé. Exemple : ${terms[0]} - ${terms[1]} = ${evalFrac(terms[0])} - (${evalFrac(terms[1])})`;
       makeChoices(document.getElementById("subChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"subExplain",exp);
     }
 
@@ -296,7 +342,7 @@
       let expr=terms.join(" × ");
       let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
       document.getElementById("multQ").innerHTML=`Calcule : ${expr}`;
-      let exp=`Produit : ${terms.map(evalFrac).join(" × ")} = ${res}`;
+      let exp=`On applique la règle du signe. Exemple : ${terms.map(evalFrac).join(" × ")} = ${res}`;
       makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
 
@@ -307,7 +353,7 @@
       while(evalFrac(b)===0) b=formatNumber("int");
       let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
       document.getElementById("divQ").innerHTML=`Calcule : ${a} ÷ ${b}`;
-      let exp=`On applique la règle du signe : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
+      let exp=`On applique la règle du signe. Exemple : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
       makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
