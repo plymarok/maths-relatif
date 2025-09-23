@@ -47,7 +47,7 @@
       box-shadow: var(--shadow);
     }
     main {
-      max-width: 800px;
+      max-width: 850px;
       margin: 20px auto;
       padding: 15px;
     }
@@ -92,6 +92,26 @@
       font-weight: bold;
       color: #444;
     }
+    /* Styles calculatrice */
+    #calcDisplay {
+      width: 100%;
+      font-size: 1.4rem;
+      padding: 10px;
+      margin-bottom: 10px;
+      text-align: right;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+    }
+    #calcButtons button {
+      width: 22%;
+      margin: 3px;
+      padding: 12px;
+      font-size: 1.2rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      background: #e2e8f0;
+    }
   </style>
 </head>
 <body>
@@ -103,13 +123,14 @@
     <button onclick="showSection('soustraction')">Soustraction</button>
     <button onclick="showSection('multiplication')">Multiplication</button>
     <button onclick="showSection('division')">Division</button>
+    <button onclick="showSection('calculatrice')">🧮 Calculatrice</button>
   </nav>
 
   <main>
     <!-- Comparaison -->
     <section id="comparaison" class="card">
       <h2>Comparer des nombres relatifs</h2>
-      <p>Plus un nombre est éloigné de 0 du côté négatif, plus il est petit.<br>
+      <p>Un nombre est plus petit s’il est plus éloigné de 0 du côté négatif.<br>
          Exemple : -12 &lt; -3 &lt; 0 &lt; 5.</p>
       <div class="question" id="compQ"></div>
       <div class="choices" id="compChoices"></div>
@@ -174,12 +195,39 @@
       <p id="divExplain" class="explain"></p>
       <button class="refresh" onclick="newDivision()">Nouvel exercice</button>
     </section>
+
+    <!-- Calculatrice -->
+    <section id="calculatrice" class="card" style="display:none;">
+      <h2>🧮 Calculatrice</h2>
+      <input type="text" id="calcDisplay" disabled>
+      <div id="calcButtons"></div>
+    </section>
   </main>
 
   <script>
     function showSection(id) {
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
+    }
+
+    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    function formatNumber(type){
+      if(type==="int") return randInt(-20,20);
+      if(type==="dec") return (Math.round((Math.random()*20-10)*10)/10).toFixed(1);
+      if(type==="frac"){
+        let num=randInt(-9,9); let den=randInt(2,9);
+        if(num===0) num=1;
+        return `${num}/${den}`;
+      }
+    }
+
+    function evalFrac(str){
+      if(str.includes("/")){
+        let [n,d]=str.split("/").map(Number);
+        return n/d;
+      }
+      return parseFloat(str);
     }
 
     function makeChoices(container, correct, wrongs, explainId, explanation) {
@@ -205,89 +253,107 @@
     }
 
     // === Comparaison ===
-    function newComparison() {
-      let a = Math.floor(Math.random()*41)-20;
-      let b = Math.floor(Math.random()*41)-20;
-      while(a===b) b = Math.floor(Math.random()*41)-20;
-      document.getElementById("compQ").textContent = `Quel est le plus grand entre ${a} et ${b} ?`;
-      let correct = (a>b)?a:b;
-      let exp = (a>b)?`${a} est plus grand car il est plus proche de zéro ou positif.`:`${b} est plus grand car il est plus proche de zéro ou positif.`;
-      makeChoices(document.getElementById("compChoices"), correct, [a+b, a-b], "compExplain", exp);
+    function newComparison(){
+      let type = ["int","dec","frac"][randInt(0,2)];
+      let a = formatNumber(type);
+      let b = formatNumber(type);
+      while(evalFrac(a)===evalFrac(b)) b=formatNumber(type);
+
+      document.getElementById("compQ").textContent=`Quel est le plus grand entre ${a} et ${b} ?`;
+      let correct = evalFrac(a)>evalFrac(b)?a:b;
+      let exp = `${correct} est plus grand car ${evalFrac(correct)} est plus proche de zéro ou positif.`;
+      makeChoices(document.getElementById("compChoices"),correct,[a,b].map(x=>x).filter(x=>x!==correct),"compExplain",exp);
     }
 
-    // === Valeur absolue / opposé ===
-    function newValAbs() {
-      let n = Math.floor(Math.random()*41)-20;
-      let type = Math.random()<0.5?"abs":"opp";
-      if(type==="abs"){
-        document.getElementById("valQ").textContent = `Quelle est la valeur absolue de ${n} ?`;
-        let correct = Math.abs(n);
+    // === Valeur absolue & opposé ===
+    function newValAbs(){
+      let type = ["int","dec","frac"][randInt(0,2)];
+      let n = formatNumber(type);
+      if(Math.random()<0.5){
+        document.getElementById("valQ").textContent=`Quelle est la valeur absolue de ${n} ?`;
+        let correct = Math.abs(evalFrac(n)).toString();
         let exp = `La valeur absolue est la distance à 0 : |${n}| = ${correct}`;
-        makeChoices(document.getElementById("valChoices"), correct, [correct+1,correct-1], "valExplain", exp);
+        makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+1).toString(), (evalFrac(n)-1).toString() ],"valExplain",exp);
       } else {
-        document.getElementById("valQ").textContent = `Quel est l’opposé de ${n} ?`;
-        let correct = -n;
+        document.getElementById("valQ").textContent=`Quel est l’opposé de ${n} ?`;
+        let correct = (-evalFrac(n)).toString();
         let exp = `L’opposé de ${n} est ${correct} car ${n} + ${correct} = 0.`;
-        makeChoices(document.getElementById("valChoices"), correct, [correct+2,correct-2], "valExplain", exp);
+        makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],"valExplain",exp);
       }
     }
 
     // === Addition ===
-    function newAddition() {
-      let a = Math.floor(Math.random()*21)-10;
-      let b = Math.floor(Math.random()*21)-10;
-      let res = a+b;
-      document.getElementById("addQ").textContent = `Calcule : (${a}) + (${b})`;
-      let exp = `On calcule : ${a}+${b}=${res}.`;
-      makeChoices(document.getElementById("addChoices"), res, [res+2,res-2], "addExplain", exp);
+    function newAddition(){
+      let type = ["int","dec","frac"][randInt(0,2)];
+      let a = formatNumber(type);
+      let b = formatNumber(type);
+      let res = (evalFrac(a)+evalFrac(b)).toFixed(2);
+      document.getElementById("addQ").textContent=`Calcule : (${a}) + (${b})`;
+      let exp=`On calcule : ${a}+${b}=${res}`;
+      makeChoices(document.getElementById("addChoices"),res,[ (evalFrac(a)+evalFrac(b)+1).toFixed(2),(evalFrac(a)+evalFrac(b)-1).toFixed(2) ],"addExplain",exp);
     }
 
     // === Soustraction ===
-    function newSubtraction() {
-      let a = Math.floor(Math.random()*21)-10;
-      let b = Math.floor(Math.random()*21)-10;
-      let res = a-b;
-      document.getElementById("subQ").textContent = `Calcule : (${a}) - (${b})`;
-      let exp = `Soustraire revient à ajouter l’opposé : ${a} - (${b}) = ${a} + (${ -b }) = ${res}.`;
-      makeChoices(document.getElementById("subChoices"), res, [res+3,res-3], "subExplain", exp);
+    function newSubtraction(){
+      let type = ["int","dec","frac"][randInt(0,2)];
+      let a = formatNumber(type);
+      let b = formatNumber(type);
+      let res = (evalFrac(a)-evalFrac(b)).toFixed(2);
+      document.getElementById("subQ").textContent=`Calcule : (${a}) - (${b})`;
+      let exp=`Soustraire = ajouter l’opposé : ${a} - (${b}) = ${a} + (${ -evalFrac(b) }) = ${res}`;
+      makeChoices(document.getElementById("subChoices"),res,[ (evalFrac(a)-evalFrac(b)+1).toFixed(2),(evalFrac(a)-evalFrac(b)-1).toFixed(2) ],"subExplain",exp);
     }
 
     // === Multiplication ===
-    function newMultiplication() {
-      let nums = [];
-      let count = Math.random()<0.5?2:3;
-      for(let i=0;i<count;i++){
-        let n = Math.floor(Math.random()*11)-5;
-        if(n===0) n=1;
-        nums.push(n);
-      }
-      let expr = nums.map(n=> (n>=0?`+${n}`:`${n}`)).join(" × ");
-      let res = nums.reduce((acc,n)=>acc*n,1);
-      document.getElementById("multQ").textContent = `Calcule : ${expr}`;
-      let exp = `Le produit est ${res}. Règle du signe : ${nums.filter(n=>n<0).length} nombres négatifs → ${res>0?"positif":"négatif"}.`;
-      makeChoices(document.getElementById("multChoices"), res, [res+5,res-5], "multExplain", exp);
+    function newMultiplication(){
+      let count = randInt(2,3);
+      let terms=[];
+      for(let i=0;i<count;i++) terms.push(formatNumber(["int","dec","frac"][randInt(0,2)]));
+      let expr=terms.join(" × ");
+      let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
+      document.getElementById("multQ").textContent=`Calcule : ${expr}`;
+      let exp=`Produit = ${res}. Règle du signe : ${terms.filter(t=>evalFrac(t)<0).length} négatifs → ${res>=0?"positif":"négatif"}.`;
+      makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
 
     // === Division ===
-    function newDivision() {
-      let a = Math.floor(Math.random()*41)-20;
-      let b = Math.floor(Math.random()*19)+1;
-      if(a===0) a=10;
-      let res = Math.floor(a/b);
-      document.getElementById("divQ").textContent = `Calcule : (${a}) ÷ (${b}) (partie entière)`;
-      let exp = `On applique la règle du signe et on divise : ${a}/${b} ≈ ${res}.`;
-      makeChoices(document.getElementById("divChoices"), res, [res+1,res-1], "divExplain", exp);
+    function newDivision(){
+      let a=formatNumber(["int","dec","frac"][randInt(0,2)]);
+      let b=formatNumber(["int","dec","frac"][randInt(0,2)]);
+      while(evalFrac(b)===0) b=formatNumber("int");
+      let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
+      document.getElementById("divQ").textContent=`Calcule : (${a}) ÷ (${b})`;
+      let exp=`On divise : ${a}/${b}=${res}. Règle du signe = même que multiplication.`;
+      makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
-    // Initialisation
-    window.onload = () => {
-      newComparison();
-      newValAbs();
-      newAddition();
-      newSubtraction();
-      newMultiplication();
-      newDivision();
-      showSection('comparaison');
+    // === Calculatrice ===
+    function createCalculator(){
+      let buttons=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
+      let container=document.getElementById("calcButtons");
+      container.innerHTML="";
+      buttons.forEach(b=>{
+        let btn=document.createElement("button");
+        btn.textContent=b;
+        btn.onclick=()=>{
+          let display=document.getElementById("calcDisplay");
+          if(b==="C") display.value="";
+          else if(b==="="){
+            try{ display.value=eval(display.value); }
+            catch{ display.value="Erreur"; }
+          }
+          else display.value+=b;
+        };
+        container.appendChild(btn);
+      });
+    }
+    createCalculator();
+
+    // Init
+    window.onload=()=>{
+      newComparison(); newValAbs(); newAddition();
+      newSubtraction(); newMultiplication(); newDivision();
+      showSection("comparaison");
     }
   </script>
 </body>
