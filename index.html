@@ -47,9 +47,21 @@
       box-shadow: var(--shadow);
     }
     main {
-      max-width: 850px;
+      display: flex;
+      max-width: 1200px;
       margin: 20px auto;
+      gap: 20px;
+    }
+    .content {
+      flex: 2;
+    }
+    .calculator {
+      flex: 1;
+      background: var(--card);
       padding: 15px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      height: fit-content;
     }
     .card {
       background: var(--card);
@@ -123,85 +135,73 @@
     <button onclick="showSection('soustraction')">Soustraction</button>
     <button onclick="showSection('multiplication')">Multiplication</button>
     <button onclick="showSection('division')">Division</button>
-    <button onclick="showSection('calculatrice')">🧮 Calculatrice</button>
   </nav>
 
   <main>
-    <!-- Comparaison -->
-    <section id="comparaison" class="card">
-      <h2>Comparer des nombres relatifs</h2>
-      <p>Un nombre est plus petit s’il est plus éloigné de 0 du côté négatif.<br>
-         Exemple : -12 &lt; -3 &lt; 0 &lt; 5.</p>
-      <div class="question" id="compQ"></div>
-      <div class="choices" id="compChoices"></div>
-      <p id="compExplain" class="explain"></p>
-      <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
-    </section>
+    <!-- Zone exercices -->
+    <div class="content">
+      <!-- Comparaison -->
+      <section id="comparaison" class="card">
+        <h2>Comparer des nombres relatifs</h2>
+        <p>Un nombre est plus petit s’il est plus éloigné de 0 du côté négatif.</p>
+        <div class="question" id="compQ"></div>
+        <div class="choices" id="compChoices"></div>
+        <p id="compExplain" class="explain"></p>
+        <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
+      </section>
 
-    <!-- Valeur absolue -->
-    <section id="valabs" class="card" style="display:none;">
-      <h2>Valeur absolue et opposé</h2>
-      <p>Valeur absolue : distance à 0 (toujours positive).<br>
-         Opposé : même distance à 0 mais signe contraire.</p>
-      <div class="question" id="valQ"></div>
-      <div class="choices" id="valChoices"></div>
-      <p id="valExplain" class="explain"></p>
-      <button class="refresh" onclick="newValAbs()">Nouvel exercice</button>
-    </section>
+      <!-- Valeur absolue -->
+      <section id="valabs" class="card" style="display:none;">
+        <h2>Valeur absolue et opposé</h2>
+        <div class="question" id="valQ"></div>
+        <div class="choices" id="valChoices"></div>
+        <p id="valExplain" class="explain"></p>
+        <button class="refresh" onclick="newValAbs()">Nouvel exercice</button>
+      </section>
 
-    <!-- Addition -->
-    <section id="addition" class="card" style="display:none;">
-      <h2>Addition de relatifs</h2>
-      <p>➕ Même signe → on additionne les distances et on garde le signe.<br>
-         ➕ Signes différents → on soustrait les distances et on garde le signe du plus grand.</p>
-      <div class="question" id="addQ"></div>
-      <div class="choices" id="addChoices"></div>
-      <p id="addExplain" class="explain"></p>
-      <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
-    </section>
+      <!-- Addition -->
+      <section id="addition" class="card" style="display:none;">
+        <h2>Addition de relatifs</h2>
+        <div class="question" id="addQ"></div>
+        <div class="choices" id="addChoices"></div>
+        <p id="addExplain" class="explain"></p>
+        <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
+      </section>
 
-    <!-- Soustraction -->
-    <section id="soustraction" class="card" style="display:none;">
-      <h2>Soustraction de relatifs</h2>
-      <p>Soustraire un nombre relatif revient à <b>ajouter son opposé</b>.</p>
-      <div class="question" id="subQ"></div>
-      <div class="choices" id="subChoices"></div>
-      <p id="subExplain" class="explain"></p>
-      <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
-    </section>
+      <!-- Soustraction -->
+      <section id="soustraction" class="card" style="display:none;">
+        <h2>Soustraction de relatifs</h2>
+        <div class="question" id="subQ"></div>
+        <div class="choices" id="subChoices"></div>
+        <p id="subExplain" class="explain"></p>
+        <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
+      </section>
 
-    <!-- Multiplication -->
-    <section id="multiplication" class="card" style="display:none;">
-      <h2>Multiplication de relatifs</h2>
-      <p>✖ Deux nombres de même signe → positif.<br>
-         ✖ Deux nombres de signes contraires → négatif.<br>
-         ✖ Plusieurs facteurs :<br>
-         - Pair de négatifs → produit positif.<br>
-         - Impair de négatifs → produit négatif.</p>
-      <div class="question" id="multQ"></div>
-      <div class="choices" id="multChoices"></div>
-      <p id="multExplain" class="explain"></p>
-      <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
-    </section>
+      <!-- Multiplication -->
+      <section id="multiplication" class="card" style="display:none;">
+        <h2>Multiplication de relatifs</h2>
+        <div class="question" id="multQ"></div>
+        <div class="choices" id="multChoices"></div>
+        <p id="multExplain" class="explain"></p>
+        <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
+      </section>
 
-    <!-- Division -->
-    <section id="division" class="card" style="display:none;">
-      <h2>Division de relatifs</h2>
-      <p>➗ Même règle de signe que la multiplication :<br>
-         - Signe identique → quotient positif.<br>
-         - Signe contraire → quotient négatif.</p>
-      <div class="question" id="divQ"></div>
-      <div class="choices" id="divChoices"></div>
-      <p id="divExplain" class="explain"></p>
-      <button class="refresh" onclick="newDivision()">Nouvel exercice</button>
-    </section>
+      <!-- Division -->
+      <section id="division" class="card" style="display:none;">
+        <h2>Division de relatifs</h2>
+        <div class="question" id="divQ"></div>
+        <div class="choices" id="divChoices"></div>
+        <p id="divExplain" class="explain"></p>
+        <button class="refresh" onclick="newDivision()">Nouvel exercice</button>
+      </section>
+    </div>
 
     <!-- Calculatrice -->
-    <section id="calculatrice" class="card" style="display:none;">
+    <div class="calculator">
       <h2>🧮 Calculatrice</h2>
       <input type="text" id="calcDisplay" disabled>
       <div id="calcButtons"></div>
-    </section>
+    </div>
   </main>
 
   <script>
@@ -211,7 +211,6 @@
     }
 
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
     function formatNumber(type){
       if(type==="int") return randInt(-20,20);
       if(type==="dec") return (Math.round((Math.random()*20-10)*10)/10).toFixed(1);
@@ -221,7 +220,6 @@
         return `${num}/${den}`;
       }
     }
-
     function evalFrac(str){
       if(str.includes("/")){
         let [n,d]=str.split("/").map(Number);
@@ -229,7 +227,6 @@
       }
       return parseFloat(str);
     }
-
     function makeChoices(container, correct, wrongs, explainId, explanation) {
       container.innerHTML = "";
       document.getElementById(explainId).textContent = "";
@@ -252,82 +249,64 @@
       });
     }
 
-    // === Comparaison ===
     function newComparison(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let a = formatNumber(type);
       let b = formatNumber(type);
       while(evalFrac(a)===evalFrac(b)) b=formatNumber(type);
-
       document.getElementById("compQ").textContent=`Quel est le plus grand entre ${a} et ${b} ?`;
       let correct = evalFrac(a)>evalFrac(b)?a:b;
-      let exp = `${correct} est plus grand car ${evalFrac(correct)} est plus proche de zéro ou positif.`;
-      makeChoices(document.getElementById("compChoices"),correct,[a,b].map(x=>x).filter(x=>x!==correct),"compExplain",exp);
+      let exp = `${correct} est plus grand car ${evalFrac(correct)} est plus proche de zéro.`;
+      makeChoices(document.getElementById("compChoices"),correct,[a,b].filter(x=>x!==correct),"compExplain",exp);
     }
-
-    // === Valeur absolue & opposé ===
     function newValAbs(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let n = formatNumber(type);
       if(Math.random()<0.5){
-        document.getElementById("valQ").textContent=`Quelle est la valeur absolue de ${n} ?`;
+        document.getElementById("valQ").textContent=`Valeur absolue de ${n} ?`;
         let correct = Math.abs(evalFrac(n)).toString();
-        let exp = `La valeur absolue est la distance à 0 : |${n}| = ${correct}`;
+        let exp = `|${n}| = ${correct}`;
         makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+1).toString(), (evalFrac(n)-1).toString() ],"valExplain",exp);
       } else {
-        document.getElementById("valQ").textContent=`Quel est l’opposé de ${n} ?`;
+        document.getElementById("valQ").textContent=`Opposé de ${n} ?`;
         let correct = (-evalFrac(n)).toString();
-        let exp = `L’opposé de ${n} est ${correct} car ${n} + ${correct} = 0.`;
+        let exp = `Opposé de ${n} = ${correct} car ${n}+${correct}=0.`;
         makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],"valExplain",exp);
       }
     }
-
-    // === Addition ===
     function newAddition(){
-      let type = ["int","dec","frac"][randInt(0,2)];
-      let a = formatNumber(type);
-      let b = formatNumber(type);
+      let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
+      let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let res = (evalFrac(a)+evalFrac(b)).toFixed(2);
       document.getElementById("addQ").textContent=`Calcule : (${a}) + (${b})`;
-      let exp=`On calcule : ${a}+${b}=${res}`;
+      let exp=`${a}+${b}=${res}`;
       makeChoices(document.getElementById("addChoices"),res,[ (evalFrac(a)+evalFrac(b)+1).toFixed(2),(evalFrac(a)+evalFrac(b)-1).toFixed(2) ],"addExplain",exp);
     }
-
-    // === Soustraction ===
     function newSubtraction(){
-      let type = ["int","dec","frac"][randInt(0,2)];
-      let a = formatNumber(type);
-      let b = formatNumber(type);
+      let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
+      let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let res = (evalFrac(a)-evalFrac(b)).toFixed(2);
       document.getElementById("subQ").textContent=`Calcule : (${a}) - (${b})`;
-      let exp=`Soustraire = ajouter l’opposé : ${a} - (${b}) = ${a} + (${ -evalFrac(b) }) = ${res}`;
+      let exp=`${a} - (${b}) = ${a} + (${ -evalFrac(b) }) = ${res}`;
       makeChoices(document.getElementById("subChoices"),res,[ (evalFrac(a)-evalFrac(b)+1).toFixed(2),(evalFrac(a)-evalFrac(b)-1).toFixed(2) ],"subExplain",exp);
     }
-
-    // === Multiplication ===
     function newMultiplication(){
-      let count = randInt(2,3);
-      let terms=[];
-      for(let i=0;i<count;i++) terms.push(formatNumber(["int","dec","frac"][randInt(0,2)]));
+      let terms=[formatNumber("int"),formatNumber("int")];
       let expr=terms.join(" × ");
       let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
       document.getElementById("multQ").textContent=`Calcule : ${expr}`;
-      let exp=`Produit = ${res}. Règle du signe : ${terms.filter(t=>evalFrac(t)<0).length} négatifs → ${res>=0?"positif":"négatif"}.`;
+      let exp=`Produit = ${res}.`;
       makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
-
-    // === Division ===
     function newDivision(){
-      let a=formatNumber(["int","dec","frac"][randInt(0,2)]);
-      let b=formatNumber(["int","dec","frac"][randInt(0,2)]);
+      let a=formatNumber("int"), b=formatNumber("int");
       while(evalFrac(b)===0) b=formatNumber("int");
       let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
       document.getElementById("divQ").textContent=`Calcule : (${a}) ÷ (${b})`;
-      let exp=`On divise : ${a}/${b}=${res}. Règle du signe = même que multiplication.`;
+      let exp=`${a} ÷ ${b} = ${res}`;
       makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
-    // === Calculatrice ===
     function createCalculator(){
       let buttons=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
       let container=document.getElementById("calcButtons");
@@ -349,10 +328,8 @@
     }
     createCalculator();
 
-    // Init
     window.onload=()=>{
-      newComparison(); newValAbs(); newAddition();
-      newSubtraction(); newMultiplication(); newDivision();
+      newComparison(); newValAbs(); newAddition(); newSubtraction(); newMultiplication(); newDivision();
       showSection("comparaison");
     }
   </script>
