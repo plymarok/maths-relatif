@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nombres relatifs — Révisions</title>
+  <title>Nombres relatifs — Révisions interactives</title>
   <style>
     :root {
       --bg: #f9fafb;
@@ -61,6 +61,7 @@
     .question {
       margin-bottom: 12px;
       font-weight: bold;
+      font-size: 1.2rem;
     }
     .choices button {
       display: block;
@@ -71,9 +72,21 @@
       border: 1px solid #ccc;
       cursor: pointer;
       background: #f1f5f9;
+      font-size: 1rem;
     }
     .choices button.correct { background: var(--success); color: white; }
     .choices button.wrong { background: var(--error); color: white; }
+    .refresh {
+      margin-top: 15px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      box-shadow: var(--shadow);
+    }
   </style>
 </head>
 <body>
@@ -89,13 +102,10 @@
     <!-- Section Comparaison -->
     <section id="comparaison" class="card">
       <h2>Comparer des nombres relatifs</h2>
-      <p>Plus un nombre est <b>loin de zéro</b> du côté négatif, plus il est petit. Exemple : -5 &lt; -2 &lt; 0 &lt; 3.</p>
-      <div class="question">Quel est le plus grand nombre ?</div>
-      <div class="choices">
-        <button onclick="checkAnswer(this,false)">-12</button>
-        <button onclick="checkAnswer(this,true)">-3</button>
-        <button onclick="checkAnswer(this,false)">-25</button>
-      </div>
+      <p>Plus un nombre est loin de zéro du côté négatif, plus il est petit. Exemple : -5 &lt; -2 &lt; 0 &lt; 3.</p>
+      <div class="question" id="compQ"></div>
+      <div class="choices" id="compChoices"></div>
+      <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
     </section>
 
     <!-- Section Addition -->
@@ -103,24 +113,18 @@
       <h2>Addition de relatifs</h2>
       <p>➕ Même signe : on additionne les distances et on garde le signe.<br>
          ➕ Signes différents : on soustrait les distances et on garde le signe du plus grand.</p>
-      <div class="question">Calcule : (-7) + (-5)</div>
-      <div class="choices">
-        <button onclick="checkAnswer(this,true)">-12</button>
-        <button onclick="checkAnswer(this,false)">+2</button>
-        <button onclick="checkAnswer(this,false)">+12</button>
-      </div>
+      <div class="question" id="addQ"></div>
+      <div class="choices" id="addChoices"></div>
+      <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
     </section>
 
     <!-- Section Soustraction -->
     <section id="soustraction" class="card" style="display:none;">
       <h2>Soustraction de relatifs</h2>
       <p>Soustraire un nombre relatif revient à <b>ajouter son opposé</b>.</p>
-      <div class="question">Calcule : (-8) - (-3)</div>
-      <div class="choices">
-        <button onclick="checkAnswer(this,false)">-11</button>
-        <button onclick="checkAnswer(this,true)">-5</button>
-        <button onclick="checkAnswer(this,false)">+11</button>
-      </div>
+      <div class="question" id="subQ"></div>
+      <div class="choices" id="subChoices"></div>
+      <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
     </section>
 
     <!-- Section Multiplication -->
@@ -131,12 +135,9 @@
          ✖ Avec plusieurs facteurs :<br>
          - Si le nombre de négatifs est pair → produit positif.<br>
          - Si impair → produit négatif.</p>
-      <div class="question">Calcule : (-2) × (-3) × (+5)</div>
-      <div class="choices">
-        <button onclick="checkAnswer(this,true)">+30</button>
-        <button onclick="checkAnswer(this,false)">-30</button>
-        <button onclick="checkAnswer(this,false)">-10</button>
-      </div>
+      <div class="question" id="multQ"></div>
+      <div class="choices" id="multChoices"></div>
+      <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
     </section>
   </main>
 
@@ -145,12 +146,73 @@
       document.querySelectorAll("section").forEach(sec => sec.style.display = "none");
       document.getElementById(id).style.display = "block";
     }
-    function checkAnswer(btn,isCorrect) {
-      if(isCorrect) {
-        btn.classList.add("correct");
-      } else {
-        btn.classList.add("wrong");
+
+    function makeChoices(container, correct, wrongs) {
+      container.innerHTML = "";
+      let answers = [correct, ...wrongs];
+      answers.sort(() => Math.random() - 0.5);
+      answers.forEach(ans => {
+        let btn = document.createElement("button");
+        btn.textContent = ans;
+        btn.onclick = () => {
+          container.querySelectorAll("button").forEach(b => b.disabled = true);
+          if(ans === correct) btn.classList.add("correct");
+          else btn.classList.add("wrong");
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    // === Comparaison ===
+    function newComparison() {
+      let a = Math.floor(Math.random()*41)-20; // entre -20 et +20
+      let b = Math.floor(Math.random()*41)-20;
+      while(a===b) b = Math.floor(Math.random()*41)-20;
+      document.getElementById("compQ").textContent = `Quel est le plus grand entre ${a} et ${b} ?`;
+      let correct = (a>b)?a:b;
+      makeChoices(document.getElementById("compChoices"), correct, [a+b, a-b]);
+    }
+
+    // === Addition ===
+    function newAddition() {
+      let a = Math.floor(Math.random()*21)-10;
+      let b = Math.floor(Math.random()*21)-10;
+      let res = a+b;
+      document.getElementById("addQ").textContent = `Calcule : (${a}) + (${b})`;
+      makeChoices(document.getElementById("addChoices"), res, [res+2,res-2]);
+    }
+
+    // === Soustraction ===
+    function newSubtraction() {
+      let a = Math.floor(Math.random()*21)-10;
+      let b = Math.floor(Math.random()*21)-10;
+      let res = a-b;
+      document.getElementById("subQ").textContent = `Calcule : (${a}) - (${b})`;
+      makeChoices(document.getElementById("subChoices"), res, [res+3,res-3]);
+    }
+
+    // === Multiplication ===
+    function newMultiplication() {
+      let nums = [];
+      let count = Math.random()<0.5?2:3; // 2 ou 3 facteurs
+      for(let i=0;i<count;i++){
+        let n = Math.floor(Math.random()*11)-5;
+        if(n===0) n=1; // évite zéro
+        nums.push(n);
       }
+      let expr = nums.map(n=> (n>=0?`+${n}`:`${n}`)).join(" × ");
+      let res = nums.reduce((acc,n)=>acc*n,1);
+      document.getElementById("multQ").textContent = `Calcule : ${expr}`;
+      makeChoices(document.getElementById("multChoices"), res, [res+5,res-5]);
+    }
+
+    // initial
+    window.onload = () => {
+      newComparison();
+      newAddition();
+      newSubtraction();
+      newMultiplication();
+      showSection('comparaison');
     }
   </script>
 </body>
