@@ -32,7 +32,7 @@
     nav {
       display: flex;
       justify-content: center;
-      gap: 15px;
+      gap: 10px;
       padding: 10px;
       flex-wrap: wrap;
     }
@@ -61,7 +61,7 @@
     .question {
       margin-bottom: 12px;
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
     }
     .choices button {
       display: block;
@@ -87,57 +87,92 @@
       font-size: 1rem;
       box-shadow: var(--shadow);
     }
+    .explain {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #444;
+    }
   </style>
 </head>
 <body>
   <header>📘 Révisions — Les nombres relatifs</header>
   <nav>
     <button onclick="showSection('comparaison')">Comparer</button>
+    <button onclick="showSection('valabs')">Valeur absolue & Opposé</button>
     <button onclick="showSection('addition')">Addition</button>
     <button onclick="showSection('soustraction')">Soustraction</button>
     <button onclick="showSection('multiplication')">Multiplication</button>
+    <button onclick="showSection('division')">Division</button>
   </nav>
 
   <main>
-    <!-- Section Comparaison -->
+    <!-- Comparaison -->
     <section id="comparaison" class="card">
       <h2>Comparer des nombres relatifs</h2>
-      <p>Plus un nombre est loin de zéro du côté négatif, plus il est petit. Exemple : -5 &lt; -2 &lt; 0 &lt; 3.</p>
+      <p>Plus un nombre est éloigné de 0 du côté négatif, plus il est petit.<br>
+         Exemple : -12 &lt; -3 &lt; 0 &lt; 5.</p>
       <div class="question" id="compQ"></div>
       <div class="choices" id="compChoices"></div>
+      <p id="compExplain" class="explain"></p>
       <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
     </section>
 
-    <!-- Section Addition -->
+    <!-- Valeur absolue -->
+    <section id="valabs" class="card" style="display:none;">
+      <h2>Valeur absolue et opposé</h2>
+      <p>Valeur absolue : distance à 0 (toujours positive).<br>
+         Opposé : même distance à 0 mais signe contraire.</p>
+      <div class="question" id="valQ"></div>
+      <div class="choices" id="valChoices"></div>
+      <p id="valExplain" class="explain"></p>
+      <button class="refresh" onclick="newValAbs()">Nouvel exercice</button>
+    </section>
+
+    <!-- Addition -->
     <section id="addition" class="card" style="display:none;">
       <h2>Addition de relatifs</h2>
-      <p>➕ Même signe : on additionne les distances et on garde le signe.<br>
-         ➕ Signes différents : on soustrait les distances et on garde le signe du plus grand.</p>
+      <p>➕ Même signe → on additionne les distances et on garde le signe.<br>
+         ➕ Signes différents → on soustrait les distances et on garde le signe du plus grand.</p>
       <div class="question" id="addQ"></div>
       <div class="choices" id="addChoices"></div>
+      <p id="addExplain" class="explain"></p>
       <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
     </section>
 
-    <!-- Section Soustraction -->
+    <!-- Soustraction -->
     <section id="soustraction" class="card" style="display:none;">
       <h2>Soustraction de relatifs</h2>
       <p>Soustraire un nombre relatif revient à <b>ajouter son opposé</b>.</p>
       <div class="question" id="subQ"></div>
       <div class="choices" id="subChoices"></div>
+      <p id="subExplain" class="explain"></p>
       <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
     </section>
 
-    <!-- Section Multiplication -->
+    <!-- Multiplication -->
     <section id="multiplication" class="card" style="display:none;">
       <h2>Multiplication de relatifs</h2>
       <p>✖ Deux nombres de même signe → positif.<br>
          ✖ Deux nombres de signes contraires → négatif.<br>
-         ✖ Avec plusieurs facteurs :<br>
-         - Si le nombre de négatifs est pair → produit positif.<br>
-         - Si impair → produit négatif.</p>
+         ✖ Plusieurs facteurs :<br>
+         - Pair de négatifs → produit positif.<br>
+         - Impair de négatifs → produit négatif.</p>
       <div class="question" id="multQ"></div>
       <div class="choices" id="multChoices"></div>
+      <p id="multExplain" class="explain"></p>
       <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
+    </section>
+
+    <!-- Division -->
+    <section id="division" class="card" style="display:none;">
+      <h2>Division de relatifs</h2>
+      <p>➗ Même règle de signe que la multiplication :<br>
+         - Signe identique → quotient positif.<br>
+         - Signe contraire → quotient négatif.</p>
+      <div class="question" id="divQ"></div>
+      <div class="choices" id="divChoices"></div>
+      <p id="divExplain" class="explain"></p>
+      <button class="refresh" onclick="newDivision()">Nouvel exercice</button>
     </section>
   </main>
 
@@ -147,8 +182,9 @@
       document.getElementById(id).style.display = "block";
     }
 
-    function makeChoices(container, correct, wrongs) {
+    function makeChoices(container, correct, wrongs, explainId, explanation) {
       container.innerHTML = "";
+      document.getElementById(explainId).textContent = "";
       let answers = [correct, ...wrongs];
       answers.sort(() => Math.random() - 0.5);
       answers.forEach(ans => {
@@ -156,8 +192,13 @@
         btn.textContent = ans;
         btn.onclick = () => {
           container.querySelectorAll("button").forEach(b => b.disabled = true);
-          if(ans === correct) btn.classList.add("correct");
-          else btn.classList.add("wrong");
+          if(ans === correct) {
+            btn.classList.add("correct");
+            document.getElementById(explainId).textContent = "✅ " + explanation;
+          } else {
+            btn.classList.add("wrong");
+            document.getElementById(explainId).textContent = "❌ Mauvais choix. " + explanation;
+          }
         };
         container.appendChild(btn);
       });
@@ -165,12 +206,30 @@
 
     // === Comparaison ===
     function newComparison() {
-      let a = Math.floor(Math.random()*41)-20; // entre -20 et +20
+      let a = Math.floor(Math.random()*41)-20;
       let b = Math.floor(Math.random()*41)-20;
       while(a===b) b = Math.floor(Math.random()*41)-20;
       document.getElementById("compQ").textContent = `Quel est le plus grand entre ${a} et ${b} ?`;
       let correct = (a>b)?a:b;
-      makeChoices(document.getElementById("compChoices"), correct, [a+b, a-b]);
+      let exp = (a>b)?`${a} est plus grand car il est plus proche de zéro ou positif.`:`${b} est plus grand car il est plus proche de zéro ou positif.`;
+      makeChoices(document.getElementById("compChoices"), correct, [a+b, a-b], "compExplain", exp);
+    }
+
+    // === Valeur absolue / opposé ===
+    function newValAbs() {
+      let n = Math.floor(Math.random()*41)-20;
+      let type = Math.random()<0.5?"abs":"opp";
+      if(type==="abs"){
+        document.getElementById("valQ").textContent = `Quelle est la valeur absolue de ${n} ?`;
+        let correct = Math.abs(n);
+        let exp = `La valeur absolue est la distance à 0 : |${n}| = ${correct}`;
+        makeChoices(document.getElementById("valChoices"), correct, [correct+1,correct-1], "valExplain", exp);
+      } else {
+        document.getElementById("valQ").textContent = `Quel est l’opposé de ${n} ?`;
+        let correct = -n;
+        let exp = `L’opposé de ${n} est ${correct} car ${n} + ${correct} = 0.`;
+        makeChoices(document.getElementById("valChoices"), correct, [correct+2,correct-2], "valExplain", exp);
+      }
     }
 
     // === Addition ===
@@ -179,7 +238,8 @@
       let b = Math.floor(Math.random()*21)-10;
       let res = a+b;
       document.getElementById("addQ").textContent = `Calcule : (${a}) + (${b})`;
-      makeChoices(document.getElementById("addChoices"), res, [res+2,res-2]);
+      let exp = `On calcule : ${a}+${b}=${res}.`;
+      makeChoices(document.getElementById("addChoices"), res, [res+2,res-2], "addExplain", exp);
     }
 
     // === Soustraction ===
@@ -188,30 +248,45 @@
       let b = Math.floor(Math.random()*21)-10;
       let res = a-b;
       document.getElementById("subQ").textContent = `Calcule : (${a}) - (${b})`;
-      makeChoices(document.getElementById("subChoices"), res, [res+3,res-3]);
+      let exp = `Soustraire revient à ajouter l’opposé : ${a} - (${b}) = ${a} + (${ -b }) = ${res}.`;
+      makeChoices(document.getElementById("subChoices"), res, [res+3,res-3], "subExplain", exp);
     }
 
     // === Multiplication ===
     function newMultiplication() {
       let nums = [];
-      let count = Math.random()<0.5?2:3; // 2 ou 3 facteurs
+      let count = Math.random()<0.5?2:3;
       for(let i=0;i<count;i++){
         let n = Math.floor(Math.random()*11)-5;
-        if(n===0) n=1; // évite zéro
+        if(n===0) n=1;
         nums.push(n);
       }
       let expr = nums.map(n=> (n>=0?`+${n}`:`${n}`)).join(" × ");
       let res = nums.reduce((acc,n)=>acc*n,1);
       document.getElementById("multQ").textContent = `Calcule : ${expr}`;
-      makeChoices(document.getElementById("multChoices"), res, [res+5,res-5]);
+      let exp = `Le produit est ${res}. Règle du signe : ${nums.filter(n=>n<0).length} nombres négatifs → ${res>0?"positif":"négatif"}.`;
+      makeChoices(document.getElementById("multChoices"), res, [res+5,res-5], "multExplain", exp);
     }
 
-    // initial
+    // === Division ===
+    function newDivision() {
+      let a = Math.floor(Math.random()*41)-20;
+      let b = Math.floor(Math.random()*19)+1;
+      if(a===0) a=10;
+      let res = Math.floor(a/b);
+      document.getElementById("divQ").textContent = `Calcule : (${a}) ÷ (${b}) (partie entière)`;
+      let exp = `On applique la règle du signe et on divise : ${a}/${b} ≈ ${res}.`;
+      makeChoices(document.getElementById("divChoices"), res, [res+1,res-1], "divExplain", exp);
+    }
+
+    // Initialisation
     window.onload = () => {
       newComparison();
+      newValAbs();
       newAddition();
       newSubtraction();
       newMultiplication();
+      newDivision();
       showSection('comparaison');
     }
   </script>
