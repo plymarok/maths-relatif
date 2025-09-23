@@ -104,6 +104,10 @@
       font-weight: bold;
       color: #444;
     }
+    /* Styles fractions */
+    .frac { display: inline-block; text-align: center; }
+    .frac sup { display: block; }
+    .frac sub { display: block; border-top: 1px solid black; }
     /* Styles calculatrice */
     #calcDisplay {
       width: 100%;
@@ -140,17 +144,14 @@
   <main>
     <!-- Zone exercices -->
     <div class="content">
-      <!-- Comparaison -->
       <section id="comparaison" class="card">
         <h2>Comparer des nombres relatifs</h2>
-        <p>Un nombre est plus petit s’il est plus éloigné de 0 du côté négatif.</p>
         <div class="question" id="compQ"></div>
         <div class="choices" id="compChoices"></div>
         <p id="compExplain" class="explain"></p>
         <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
       </section>
 
-      <!-- Valeur absolue -->
       <section id="valabs" class="card" style="display:none;">
         <h2>Valeur absolue et opposé</h2>
         <div class="question" id="valQ"></div>
@@ -159,7 +160,6 @@
         <button class="refresh" onclick="newValAbs()">Nouvel exercice</button>
       </section>
 
-      <!-- Addition -->
       <section id="addition" class="card" style="display:none;">
         <h2>Addition de relatifs</h2>
         <div class="question" id="addQ"></div>
@@ -168,7 +168,6 @@
         <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
       </section>
 
-      <!-- Soustraction -->
       <section id="soustraction" class="card" style="display:none;">
         <h2>Soustraction de relatifs</h2>
         <div class="question" id="subQ"></div>
@@ -177,7 +176,6 @@
         <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
       </section>
 
-      <!-- Multiplication -->
       <section id="multiplication" class="card" style="display:none;">
         <h2>Multiplication de relatifs</h2>
         <div class="question" id="multQ"></div>
@@ -186,7 +184,6 @@
         <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
       </section>
 
-      <!-- Division -->
       <section id="division" class="card" style="display:none;">
         <h2>Division de relatifs</h2>
         <div class="question" id="divQ"></div>
@@ -211,22 +208,26 @@
     }
 
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
     function formatNumber(type){
       if(type==="int") return randInt(-20,20);
       if(type==="dec") return (Math.round((Math.random()*20-10)*10)/10).toFixed(1);
       if(type==="frac"){
-        let num=randInt(-9,9); let den=randInt(2,9);
-        if(num===0) num=1;
-        return `${num}/${den}`;
+        let num=randInt(-9,9); if(num===0) num=1;
+        let den=[2,4,5,10][randInt(0,3)];
+        return `<span class="frac"><sup>${num}</sup><sub>${den}</sub></span>`;
       }
     }
+
     function evalFrac(str){
-      if(str.includes("/")){
-        let [n,d]=str.split("/").map(Number);
-        return n/d;
+      if(str.includes("frac")){
+        let num=parseFloat(str.match(/<sup>(.*?)<\/sup>/)[1]);
+        let den=parseFloat(str.match(/<sub>(.*?)<\/sub>/)[1]);
+        return num/den;
       }
       return parseFloat(str);
     }
+
     function makeChoices(container, correct, wrongs, explainId, explanation) {
       container.innerHTML = "";
       document.getElementById(explainId).textContent = "";
@@ -234,79 +235,93 @@
       answers.sort(() => Math.random() - 0.5);
       answers.forEach(ans => {
         let btn = document.createElement("button");
-        btn.textContent = ans;
+        btn.innerHTML = ans;
         btn.onclick = () => {
           container.querySelectorAll("button").forEach(b => b.disabled = true);
           if(ans === correct) {
             btn.classList.add("correct");
-            document.getElementById(explainId).textContent = "✅ " + explanation;
           } else {
             btn.classList.add("wrong");
-            document.getElementById(explainId).textContent = "❌ Mauvais choix. " + explanation;
+            document.getElementById(explainId).textContent = "❌ " + explanation;
           }
         };
         container.appendChild(btn);
       });
     }
 
+    // === Comparaison ===
     function newComparison(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let a = formatNumber(type);
       let b = formatNumber(type);
       while(evalFrac(a)===evalFrac(b)) b=formatNumber(type);
-      document.getElementById("compQ").textContent=`Quel est le plus grand entre ${a} et ${b} ?`;
+      document.getElementById("compQ").innerHTML=`Quel est le plus grand entre ${a} et ${b} ?`;
       let correct = evalFrac(a)>evalFrac(b)?a:b;
-      let exp = `${correct} est plus grand car ${evalFrac(correct)} est plus proche de zéro.`;
+      let exp = `${a} = ${evalFrac(a)}, ${b} = ${evalFrac(b)} → ${correct} est plus grand.`;
       makeChoices(document.getElementById("compChoices"),correct,[a,b].filter(x=>x!==correct),"compExplain",exp);
     }
+
+    // === Valeur absolue & opposé ===
     function newValAbs(){
       let type = ["int","dec","frac"][randInt(0,2)];
       let n = formatNumber(type);
       if(Math.random()<0.5){
-        document.getElementById("valQ").textContent=`Valeur absolue de ${n} ?`;
+        document.getElementById("valQ").innerHTML=`Valeur absolue de ${n} ?`;
         let correct = Math.abs(evalFrac(n)).toString();
-        let exp = `|${n}| = ${correct}`;
+        let exp = `|${evalFrac(n)}| = ${correct}`;
         makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+1).toString(), (evalFrac(n)-1).toString() ],"valExplain",exp);
       } else {
-        document.getElementById("valQ").textContent=`Opposé de ${n} ?`;
+        document.getElementById("valQ").innerHTML=`Opposé de ${n} ?`;
         let correct = (-evalFrac(n)).toString();
-        let exp = `Opposé de ${n} = ${correct} car ${n}+${correct}=0.`;
+        let exp = `Opposé de ${evalFrac(n)} = ${correct}.`;
         makeChoices(document.getElementById("valChoices"),correct,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],"valExplain",exp);
       }
     }
+
+    // === Addition ===
     function newAddition(){
       let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let res = (evalFrac(a)+evalFrac(b)).toFixed(2);
-      document.getElementById("addQ").textContent=`Calcule : (${a}) + (${b})`;
-      let exp=`${a}+${b}=${res}`;
-      makeChoices(document.getElementById("addChoices"),res,[ (evalFrac(a)+evalFrac(b)+1).toFixed(2),(evalFrac(a)+evalFrac(b)-1).toFixed(2) ],"addExplain",exp);
+      document.getElementById("addQ").innerHTML=`Calcule : ${a} + ${b}`;
+      let exp=`On additionne : ${evalFrac(a)} + ${evalFrac(b)} = ${res}`;
+      makeChoices(document.getElementById("addChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"addExplain",exp);
     }
+
+    // === Soustraction ===
     function newSubtraction(){
       let a = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let b = formatNumber(["int","dec","frac"][randInt(0,2)]);
       let res = (evalFrac(a)-evalFrac(b)).toFixed(2);
-      document.getElementById("subQ").textContent=`Calcule : (${a}) - (${b})`;
-      let exp=`${a} - (${b}) = ${a} + (${ -evalFrac(b) }) = ${res}`;
-      makeChoices(document.getElementById("subChoices"),res,[ (evalFrac(a)-evalFrac(b)+1).toFixed(2),(evalFrac(a)-evalFrac(b)-1).toFixed(2) ],"subExplain",exp);
+      document.getElementById("subQ").innerHTML=`Calcule : ${a} - ${b}`;
+      let exp=`Soustraire = ajouter l’opposé → ${evalFrac(a)} - (${evalFrac(b)}) = ${res}`;
+      makeChoices(document.getElementById("subChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"subExplain",exp);
     }
+
+    // === Multiplication ===
     function newMultiplication(){
-      let terms=[formatNumber("int"),formatNumber("int")];
+      let n = randInt(2,3);
+      let terms=[];
+      for(let i=0;i<n;i++) terms.push(formatNumber(["int","dec","frac"][randInt(0,2)]));
       let expr=terms.join(" × ");
       let res = terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
-      document.getElementById("multQ").textContent=`Calcule : ${expr}`;
-      let exp=`Produit = ${res}.`;
+      document.getElementById("multQ").innerHTML=`Calcule : ${expr}`;
+      let exp=`Règle du signe : ${terms.filter(t=>evalFrac(t)<0).length} négatifs → produit ${res>=0?"positif":"négatif"}.`;
       makeChoices(document.getElementById("multChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"multExplain",exp);
     }
+
+    // === Division ===
     function newDivision(){
-      let a=formatNumber("int"), b=formatNumber("int");
+      let a=formatNumber(["int","dec","frac"][randInt(0,2)]);
+      let b=formatNumber(["int","dec","frac"][randInt(0,2)]);
       while(evalFrac(b)===0) b=formatNumber("int");
       let res=(evalFrac(a)/evalFrac(b)).toFixed(2);
-      document.getElementById("divQ").textContent=`Calcule : (${a}) ÷ (${b})`;
-      let exp=`${a} ÷ ${b} = ${res}`;
+      document.getElementById("divQ").innerHTML=`Calcule : ${a} ÷ ${b}`;
+      let exp=`Règle du signe : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}`;
       makeChoices(document.getElementById("divChoices"),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],"divExplain",exp);
     }
 
+    // === Calculatrice ===
     function createCalculator(){
       let buttons=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
       let container=document.getElementById("calcButtons");
