@@ -22,15 +22,22 @@
   #toggleTheme{position:absolute;right:12px;top:8px;background:#fff;color:#000;border:none;border-radius:999px;font-size:1.05rem;cursor:pointer;padding:6px 10px}
 
   /* Barre série / options */
-  #topbar{display:flex;gap:10px;justify-content:center;align-items:center;margin:10px 12px;flex-wrap:wrap}
-  #topbar select,#topbar input,#topbar button{padding:8px 12px;border-radius:10px;border:1px solid transparent;background:var(--card);color:var(--text);box-shadow:var(--shadow)}
-  #scoreText{font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.25)}
+  #topbar{display:flex;gap:12px;justify-content:center;align-items:center;margin:12px 12px;flex-wrap:wrap}
+  /* ⬆️ sélecteurs plus grands */
+  #topbar select,#topbar input,#topbar button{
+    padding:12px 16px;border-radius:12px;border:1px solid transparent;
+    background:var(--card);color:var(--text);box-shadow:var(--shadow);
+    font-size:1.05rem; height:46px
+  }
+  #topbar select{min-width:200px}
+  #numQuestions{width:92px;text-align:center}
+  #scoreText{font-weight:700;padding:8px 12px;border-radius:12px;background:rgba(0,0,0,.25)}
   #startBtn{background:#10b981;color:#fff}
   #emergencyBtn{background:#ef4444;color:#fff}
   #confirmLevel{background:#64748b;color:#fff}
 
   nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px}
-  nav button{padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
+  nav button{padding:10px 16px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
 
   /* Layout + placement calculatrice */
   main{display:flex;max-width:1200px;margin:18px auto;gap:20px;padding:0 12px}
@@ -41,12 +48,13 @@
   .calculator{flex:1;background:var(--card);padding:15px;border-radius:var(--radius);box-shadow:var(--shadow);height:fit-content}
 
   .card{background:var(--card);padding:20px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px}
+  .card select{padding:10px 14px;font-size:1.05rem;height:44px;min-width:260px} /* ⬅️ sélecteur Méthode plus grand */
   .question{margin-bottom:12px;font-weight:700;font-size:1.1rem}
-  .choices button{display:block;width:100%;margin:6px 0;padding:10px;border-radius:var(--radius);border:1px solid #94a3b8;cursor:pointer;background:var(--choice-bg);color:var(--text);font-size:1rem;transition:background .2s}
+  .choices button{display:block;width:100%;margin:6px 0;padding:12px;border-radius:var(--radius);border:1px solid #94a3b8;cursor:pointer;background:var(--choice-bg);color:var(--text);font-size:1rem;transition:background .2s}
   .choices button:hover{background:var(--choice-hover)}
   .choices button.correct{background:var(--success)!important;color:#fff}
   .choices button.wrong{background:var(--error)!important;color:#fff}
-  .refresh{margin-top:14px;padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
+  .refresh{margin-top:14px;padding:10px 16px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
   .explain{margin-top:10px;font-weight:700;color:var(--explain)}
 
   /* Fractions lisibles */
@@ -55,11 +63,10 @@
   .frac .den{padding:0 4px}
 
   /* Calculatrice */
-  #calcDisplay{width:100%;font-size:1.3rem;padding:10px;margin-bottom:10px;text-align:right;border:1px solid #94a3b8;border-radius:var(--radius);background:var(--bg);color:var(--text)}
-  #calcButtons{display:flex;flex-wrap:wrap;gap:6px}
-  #calcButtons button{flex:1 0 22%;padding:12px;font-size:1.1rem;border-radius:10px;border:none;cursor:pointer;background:#475569;color:#fff}
+  #calcDisplay{width:100%;font-size:1.3rem;padding:12px;margin-bottom:10px;text-align:right;border:1px solid #94a3b8;border-radius:var(--radius);background:var(--bg);color:var(--text)}
+  #calcButtons{display:flex;flex-wrap:wrap;gap:8px}
+  #calcButtons button{flex:1 0 22%;padding:14px;font-size:1.15rem;border-radius:12px;border:none;cursor:pointer;background:#475569;color:#fff}
   body.light #calcButtons button{background:#e2e8f0;color:#000}
-  /* boutons spéciaux */
   #calcButtons .eqBtn{background:#f59e0b !important;color:#000 !important;}
   body.light #calcButtons .eqBtn{background:#fbbf24 !important;color:#000 !important;}
   #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;}
@@ -67,29 +74,33 @@
   @media (max-width:980px){main:not(.row):not(.column){flex-direction:column}}
 
   /* Calculs composés */
-  .line-item{display:flex;gap:8px;align-items:center;margin:8px 0}
-  .line-item input{flex:1;padding:8px;border-radius:8px;border:1px solid #94a3b8;background:var(--bg);color:var(--text)}
-  .line-item button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer}
+  .line-item{display:flex;gap:10px;align-items:center;margin:10px 0}
+  .line-item input{flex:1;padding:10px;border-radius:10px;border:1px solid #94a3b8;background:var(--bg);color:var(--text);font-size:1.05rem;height:44px}
+  .line-item button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer}
   .line-item .expected{font-size:.95rem;margin-left:8px;color:var(--explain)}
   .line-item.error input{border-color:var(--error)}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#334155;margin-left:6px;font-size:.85rem}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#334155;margin-left:6px;font-size:.9rem}
 
-  .tokenbar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-  .tokenbar button{padding:6px 10px;border:none;border-radius:999px;background:#475569;color:#fff;cursor:pointer}
+  /* ⬆️ Sélecteurs rapides beaucoup plus grands */
+  .tokenbar{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+  .tokenbar button{
+    padding:12px 18px;border:none;border-radius:999px;background:#475569;color:#fff;cursor:pointer;
+    font-size:1.2rem; min-width:56px; line-height:1
+  }
   body.light .tokenbar button{background:#e2e8f0;color:#000}
   .tokenbar .danger{background:#ef4444;color:#fff}
-  .tokenbar .muted{opacity:.8}
+  .tokenbar .muted{opacity:.85}
 
-  .numpad{display:grid;grid-template-columns:repeat(4,minmax(52px,1fr));gap:6px;margin:8px 0}
-  .numpad button{padding:10px 0;border:none;border-radius:10px;background:#475569;color:#fff;cursor:pointer}
+  .numpad{display:grid;grid-template-columns:repeat(4,minmax(64px,1fr));gap:10px;margin:10px 0}
+  .numpad button{padding:14px 0;border:none;border-radius:12px;background:#475569;color:#fff;cursor:pointer;font-size:1.15rem;min-height:56px}
   body.light .numpad button{background:#e2e8f0;color:#000}
   .numpad .danger{background:#ef4444}
   .example{margin-top:14px;padding:12px;border-radius:10px;background:rgba(59,130,246,.12)}
 
-  /* ⚠️ Bouton reset local (panic) */
-  .panic{background:#f59e0b;color:#000;border:none;border-radius:10px;padding:8px 14px;box-shadow:var(--shadow);margin:8px 0}
+  /* Bouton reset local (panic) */
+  .panic{background:#f59e0b;color:#000;border:none;border-radius:10px;padding:10px 16px;box-shadow:var(--shadow);margin:10px 0;font-weight:700}
   body.light .panic{background:#fbbf24;color:#000}
-  .mini{background:#64748b} /* petit bouton "Effacer" de ligne */
+  .mini{background:#64748b}
 </style>
 </head>
 <body>
@@ -98,7 +109,6 @@
   <button id="toggleTheme" title="Basculer thème">🌙</button>
 </header>
 
-<!-- Panneau Série / Score / Options -->
 <div id="topbar">
   <strong>Difficulté :</strong>
   <select id="level">
@@ -109,7 +119,7 @@
   <button id="confirmLevel" title="Appliquer la difficulté">OK</button>
 
   <label>Questions :
-    <input id="numQuestions" type="number" min="1" max="50" value="10" style="width:80px;text-align:center"/>
+    <input id="numQuestions" type="number" min="1" max="50" value="10"/>
   </label>
 
   <button id="startBtn">▶ Démarrer la série</button>
@@ -117,7 +127,6 @@
 
   <span id="scoreText">Mode libre</span>
 
-  <!-- Position calculatrice + mémoire -->
   <label>Position calculatrice :
     <select id="calcPos">
       <option value="droite">Droite</option>
@@ -208,11 +217,11 @@
 
       <div class="question" id="compExpr"></div>
 
-      <!-- Barres d’aide pour la ligne active -->
+      <!-- Sélecteurs rapides (opérateurs + numpad) -->
       <div id="opBar" class="tokenbar"></div>
       <div id="numPad" class="numpad"></div>
 
-      <!-- Bouton reset local (panic) -->
+      <!-- Reset local -->
       <button id="compResetBtn" class="panic" title="Repartir de zéro sans changer l'énoncé">↺ Réinitialiser l’exercice</button>
 
       <div id="compLines"></div>
@@ -264,7 +273,7 @@ document.getElementById('confirmLevel').onclick = ()=>{
   globalLevel = +document.getElementById('level').value;
   localStorage.setItem('level', String(globalLevel));
   currentAnswered=false;
-  generateForCurrent(); // relance un exercice dans la section courante
+  generateForCurrent();
   setRefreshLabel(); updateHUD();
   const expId=getExplainId();
   const p=document.getElementById(expId);
@@ -277,7 +286,6 @@ let modeSerie=false, serieTotal=0, serieIndex=0, serieScore=0;
 let currentAnswered=false;
 
 function lockUI(lock){
-  // difficulté toujours active
   document.querySelectorAll('nav button').forEach(b=>b.disabled=lock);
   document.getElementById('numQuestions').disabled=lock;
   document.getElementById('startBtn').disabled=lock;
@@ -447,7 +455,7 @@ function newDivision(){
 }
 
 /* ============== Calculs composés (ligne par ligne) ============== */
-let compoState=null; // {terms, lines:[{prompt,expectedRHS,done,...}], idx, hadMistake, method}
+let compoState=null;
 
 function composedExampleHTML(method){
   if(method==='A'){
@@ -481,14 +489,13 @@ function composedExampleHTML(method){
 function generateComposed(){
   const lvl=activeLevel();
   const count = (lvl===1)?randInt(3,4):(lvl===2?randInt(4,5):randInt(5,6));
-  const pool = (lvl===1)?['int']:['int','dec']; // pour saisie simple
+  const pool = (lvl===1)?['int']:['int','dec'];
   const terms = Array.from({length:count},()=>formatNumber(pool[randInt(0,pool.length-1)]));
   const method = document.getElementById('compMethod').value;
 
   document.getElementById('compExpr').innerHTML = `Calcule : ${htmlOfArray(terms)}<span class="pill">Méthode ${method}</span>`;
   document.getElementById('compExample').innerHTML = composedExampleHTML(method);
 
-  // Lignes attendues (RHS uniquement)
   let lines=[];
   if(method==='A'){
     lines.push({prompt:`S0 = ?`, expectedRHS:`${renderNumberText(terms[0])}`});
@@ -540,7 +547,7 @@ function generateComposed(){
   currentAnswered=false; setRefreshLabel(); updateHUD();
 }
 
-/* Reset local (panic) — garde le même énoncé/méthode */
+/* Reset local (panic) */
 function resetComposedForm(){
   if(!compoState) return;
   compoState.lines.forEach(l=>{
@@ -690,7 +697,7 @@ function renderComposedLines(){
   });
 }
 
-/* ============== Bouton “Nouvel exercice / Suivant” ============== */
+/* Nouvel exercice / Suivant */
 function handleRefresh(){
   if(modeSerie){
     if(!currentAnswered) return;
@@ -711,7 +718,7 @@ function finishSerie(){
   document.getElementById(getExplainId()).textContent=msg;
 }
 
-/* ============== Moteur / Nav ============== */
+/* Moteur / Nav */
 function generateForCurrent(){
   if(current==='comparaison') newComparison();
   else if(current==='valabs') newValAbs();
@@ -729,7 +736,7 @@ function showSection(id){
   generateForCurrent();
 }
 
-/* ============== Calculatrice (boutons colorés) ============== */
+/* Calculatrice */
 (function makeCalc(){
   const keys=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
   const box=document.getElementById('calcButtons');
@@ -748,7 +755,7 @@ function showSection(id){
   });
 })();
 
-/* ============== Démarrage ============== */
+/* Démarrage */
 window.onload=()=>{ 
   applyCalcPlacement();
   document.getElementById('level').value=String(globalLevel);
