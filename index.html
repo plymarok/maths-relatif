@@ -59,7 +59,14 @@
   #calcButtons button{flex:1 0 22%;padding:12px;font-size:1.1rem;border-radius:10px;border:none;cursor:pointer;background:#475569;color:#fff}
   body.light #calcButtons button{background:#e2e8f0;color:#000}
 
+  /* ➜ Couleurs spéciales */
+  #calcButtons .eqBtn{background:#f59e0b !important;color:#000 !important;} /* jaune */
+  body.light #calcButtons .eqBtn{background:#fbbf24 !important;color:#000 !important;}
+  #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;} /* rouge */
+  body.light #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;}
+
   @media (max-width:980px){main:not(.row):not(.column){flex-direction:column}}
+
   /* Calculs composés */
   .line-item{display:flex;gap:8px;align-items:center;margin:8px 0}
   .line-item input{flex:1;padding:8px;border-radius:8px;border:1px solid #94a3b8;background:var(--bg);color:var(--text)}
@@ -207,7 +214,6 @@ document.getElementById('toggleTheme').onclick=()=>{
 function applyCalcPlacement(){
   const pos=(localStorage.getItem('calcPos')||document.getElementById('calcPos').value);
   const main=document.getElementById('mainLayout');
-  // mettre la valeur dans le sélecteur si chargée depuis storage
   document.getElementById('calcPos').value = pos;
   main.classList.remove('row','column','calc-first');
   if(pos==='droite'){ main.classList.add('row'); }
@@ -233,7 +239,7 @@ function lockUI(lock){
   document.getElementById('startBtn').disabled=lock;
   document.getElementById('emergencyBtn').disabled=!lock;
   document.getElementById('calcPos').disabled=lock;
-  document.getElementById('compMethod').disabled = lock;
+  const cm=document.getElementById('compMethod'); if(cm) cm.disabled=lock;
 }
 function getExplainId(){
   return current==='comparaison'?'compExplain':
@@ -290,22 +296,17 @@ function renderNumberHTML(n){
   }
   return n<0?`(${n})`:`${n}`;
 }
-function renderNumberText(n){ // pour saisies (composés)
+function renderNumberText(n){
   if(typeof n==='object' && n.frac){
     const s = `${n.num}/${n.den}`;
     return n.num<0?`(${s})`:`(+${s})`;
   }
-  const sign = n<0 ? `(${n})` : `(+${n})`;
-  return sign;
+  return n<0?`(${n})`:`(+${n})`;
 }
 function formatNumber(type){
   if(type==='int') return randInt(-20,20);
   if(type==='dec') return Math.round((Math.random()*20-10)*10)/10;
-  if(type==='frac'){
-    let num=randInt(-9,9); if(num===0) num=1;
-    let den=[2,4,5,10][randInt(0,3)];
-    return {frac:true,num,den};
-  }
+  if(type==='frac'){ let num=randInt(-9,9); if(num===0) num=1; let den=[2,4,5,10][randInt(0,3)]; return {frac:true,num,den}; }
 }
 function htmlOfArray(arr){ return arr.map(renderNumberHTML).join(' + '); }
 function evalNumber(n){ return (typeof n==='object' && n.frac)? n.num/n.den : n; }
@@ -397,33 +398,27 @@ function newDivision(){
 }
 
 /* ============== Calculs composés (ligne par ligne) ============== */
-let compoState=null; // {lines:[{prompt,expected,done,firstTryOk}], idx, hadMistake, method}
+let compoState=null;
 
 function generateComposed(){
-  // Types par difficulté : entiers (F), entiers+dec (M), entiers+dec (D) — pas de fractions ici pour saisie simple
   const lvl=activeLevel();
   const count = (lvl===1)?randInt(3,4):(lvl===2?randInt(4,5):randInt(5,6));
   const pool = (lvl===1)?['int']:['int','dec'];
   const terms = Array.from({length:count},()=>formatNumber(pool[randInt(0,pool.length-1)]));
   const method = document.getElementById('compMethod').value;
 
-  // Expression d'énoncé (belle avec fractions si un jour)
   document.getElementById('compExpr').innerHTML = `Calcule : ${htmlOfArray(terms)}<span class="pill">Méthode ${method}</span>`;
 
-  // Préparer les lignes attendues selon la méthode (format texte tapable)
   let lines=[];
   if(method==='A'){
-    // Sommes partielles S0, S1, ...
     let s = evalNumber(terms[0]);
     lines.push({prompt:`S0 = ?`, expected:`S0 = ${renderNumberText(terms[0])}`});
     for(let i=1;i<terms.length;i++){
       const t = evalNumber(terms[i]);
-      const prev = i-1;
       s = +(Math.round((s + t)*100)/100);
-      lines.push({prompt:`S${i} = ?`, expected:`S${i} = S${prev} + ${renderNumberText(terms[i])} = ${two(s)}`});
+      lines.push({prompt:`S${i} = ?`, expected:`S${i} = S${i-1} + ${renderNumberText(terms[i])} = ${two(s)}`});
     }
   }else if(method==='B'){
-    // Regrouper + et - puis calculer
     const pos = terms.filter(x=>evalNumber(x)>=0);
     const neg = terms.filter(x=>evalNumber(x)<0);
     const sumP = two(pos.reduce((a,b)=>a+evalNumber(b),0));
@@ -434,7 +429,6 @@ function generateComposed(){
     lines.push({prompt:`Étape 3`, expected:`Sommes : P = ${sumP} ; N = ${sumN}`});
     lines.push({prompt:`Étape 4`, expected:`Résultat : P + N = ${res}`});
   }else{
-    // Méthode C — Paires (associer pos/neg dans l'ordre)
     const pos = terms.filter(x=>evalNumber(x)>=0);
     const neg = terms.filter(x=>evalNumber(x)<0);
     const pairs = Math.min(pos.length,neg.length);
@@ -444,7 +438,7 @@ function generateComposed(){
       lines.push({prompt:`Paire ${i+1}`, expected:`${renderNumberText(pos[i])} + ${renderNumberText(neg[i])} = ${r}`});
       partials.push(+r);
     }
-    const rest = terms.slice(pairs*2); // reste approximatif si nb différents
+    const rest = terms.slice(pairs*2);
     let total = partials.reduce((a,b)=>a+b,0);
     if(rest.length){
       lines.push({prompt:`Reste`, expected:`Reste : ${rest.map(renderNumberText).join(' + ')}`});
@@ -467,7 +461,7 @@ function renderComposedLines(){
     const label=document.createElement('span'); label.textContent=`${ln.prompt}`;
     const input=document.createElement('input'); input.placeholder='Recopie ta ligne ici…';
     input.value= ln.done ? ln.expected : '';
-    input.disabled = (i>compoState.idx); // seules lignes jusqu'à idx sont actives
+    input.disabled = (i>compoState.idx);
     const btn=document.createElement('button'); btn.textContent='Valider';
     const exp=document.createElement('span'); exp.className='expected';
 
@@ -481,9 +475,8 @@ function renderComposedLines(){
           ln.done=true; ln.copyMode=false; div.classList.remove('error'); exp.textContent='✔';
           compoState.idx++;
           if(compoState.idx>=compoState.lines.length){
-            // fin de l’exercice composés
             if(modeSerie){
-              if(!compoState.hadMistake) serieScore++; // 1 point seulement si aucun faux en 1er essai
+              if(!compoState.hadMistake) serieScore++;
               currentAnswered=true; setRefreshLabel(); updateHUD();
             }else{
               document.getElementById('compExplain2').textContent="Exercice terminé.";
@@ -496,7 +489,6 @@ function renderComposedLines(){
         return;
       }
 
-      // 1ère validation
       if(val===ln.expected){
         ln.done=true; ln.firstTryOk = (ln.firstTryOk===null)?true:ln.firstTryOk;
         exp.textContent='✔';
@@ -511,7 +503,6 @@ function renderComposedLines(){
         }
         renderComposedLines();
       }else{
-        // faux : on affiche la bonne ligne et oblige à recopier
         ln.firstTryOk = false; compoState.hadMistake=true;
         div.classList.add('error');
         exp.textContent = `Réponse attendue : ${ln.expected}`;
@@ -542,7 +533,6 @@ function handleRefresh(){
     generateForCurrent();
   }
 }
-
 function finishSerie(){
   modeSerie=false; lockUI(false); updateHUD(); setRefreshLabel();
   const msg=`✅ Série terminée : ${serieScore}/${serieTotal} (${Math.round(100*serieScore/serieTotal)}%)`;
@@ -560,7 +550,6 @@ function generateForCurrent(){
   else if(current==='composes') generateComposed();
   setRefreshLabel(); updateHUD();
 }
-
 function showSection(id){
   document.querySelectorAll('section').forEach(s=>s.style.display='none');
   document.getElementById(id).style.display='block';
@@ -568,12 +557,15 @@ function showSection(id){
   generateForCurrent();
 }
 
-/* ============== Calculatrice ============== */
+/* ============== Calculatrice (boutons colorés) ============== */
 (function makeCalc(){
   const keys=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
   const box=document.getElementById('calcButtons');
   keys.forEach(k=>{
-    const b=document.createElement('button'); b.textContent=k;
+    const b=document.createElement('button'); 
+    b.textContent=k;
+    if(k==="=") b.classList.add('eqBtn');   // JAUNE
+    if(k==="C") b.classList.add('clrBtn');  // ROUGE
     b.onclick=()=>{
       const d=document.getElementById('calcDisplay');
       if(k==="C") d.value="";
@@ -586,7 +578,6 @@ function showSection(id){
 
 /* ============== Démarrage ============== */
 window.onload=()=>{ 
-  // restaurer position calc au chargement
   applyCalcPlacement();
   showSection('comparaison'); 
 };
