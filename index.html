@@ -9,22 +9,22 @@
       --bg:#0f172a; --card:#1e293b; --accent:#3b82f6;
       --success:#16a34a; --error:#dc2626; --text:#f1f5f9;
       --choice-bg:#334155; --choice-hover:#475569; --explain:#fde047;
-      --radius:12px; --shadow:0 4px 10px rgba(0,0,0,0.6);
+      --radius:12px; --shadow:0 4px 10px rgba(0,0,0,.6);
     }
     body.light{
       --bg:#f9fafb; --card:#ffffff; --text:#111827;
       --choice-bg:#f1f5f9; --choice-hover:#e2e8f0; --explain:#444;
-      --shadow:0 4px 10px rgba(0,0,0,0.1);
+      --shadow:0 4px 10px rgba(0,0,0,.1);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji",sans-serif;background:var(--bg);color:var(--text)}
+    body{margin:0;font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
     header{background:var(--accent);color:#fff;text-align:center;padding:14px 48px;font-size:1.25rem;font-weight:700;position:relative}
     #toggleTheme{position:absolute;right:12px;top:8px;background:#fff;color:#000;border:none;border-radius:999px;font-size:1.05rem;cursor:pointer;padding:6px 10px}
-    #scoreboard{position:absolute;left:12px;top:8px;font-size:.95rem;background:rgba(0,0,0,.25);padding:6px 10px;border-radius:var(--radius)}
     nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px}
     nav button{padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
-    #difficulty{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:4px}
-    #difficulty select,#difficulty button{padding:8px 12px;border-radius:10px;border:1px solid transparent;background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+    #topbar{display:flex;gap:12px;justify-content:center;align-items:center;margin:10px 12px;flex-wrap:wrap}
+    #topbar select,#topbar button{padding:8px 12px;border-radius:10px;border:1px solid transparent;background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+    #scoreText{font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.25)}
     main{display:flex;max-width:1200px;margin:18px auto;gap:20px;padding:0 12px}
     .content{flex:2}
     .calculator{flex:1;background:var(--card);padding:15px;border-radius:var(--radius);box-shadow:var(--shadow);height:fit-content}
@@ -36,11 +36,9 @@
     .choices button.wrong{background:var(--error)!important;color:#fff}
     .refresh{margin-top:14px;padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
     .explain{margin-top:10px;font-weight:700;color:var(--explain)}
-    /* Fractions lisibles (trait épais, centré, s'adapte au thème) */
     .frac{display:inline-grid;grid-template-rows:auto auto;text-align:center;vertical-align:middle}
     .frac .num{border-bottom:2px solid currentColor;padding:0 4px}
     .frac .den{padding:0 4px}
-    /* Calculatrice */
     #calcDisplay{width:100%;font-size:1.3rem;padding:10px;margin-bottom:10px;text-align:right;border:1px solid #94a3b8;border-radius:var(--radius);background:var(--bg);color:var(--text)}
     #calcButtons{display:flex;flex-wrap:wrap;gap:6px}
     #calcButtons button{flex:1 0 22%;padding:12px;font-size:1.1rem;border-radius:10px;border:none;cursor:pointer;background:#475569;color:#fff}
@@ -51,18 +49,18 @@
 <body>
   <header>
     📘 Révisions — Les nombres relatifs
-    <span id="scoreboard">Score : 0/0</span>
     <button id="toggleTheme" title="Basculer thème">🌙</button>
   </header>
 
-  <div id="difficulty">
+  <div id="topbar">
     <strong>Difficulté :</strong>
-    <select id="level" onchange="resetScore()">
+    <select id="level">
       <option value="1">Facile</option>
       <option value="2" selected>Moyen</option>
       <option value="3">Difficile</option>
     </select>
     <button onclick="resetScore()">🔄 Réinitialiser le score</button>
+    <span id="scoreText">Score : 0/0</span>
   </div>
 
   <nav>
@@ -76,62 +74,55 @@
 
   <main>
     <div class="content">
-      <!-- Comparaison -->
       <section id="comparaison" class="card">
         <h2>Comparer des nombres relatifs</h2>
         <div class="question" id="compQ"></div>
         <div class="choices" id="compChoices"></div>
         <p id="compExplain" class="explain"></p>
-        <button class="refresh" onclick="newComparison()">Nouvel exercice</button>
+        <button class="refresh" onclick="newComparison(true)">Nouvel exercice</button>
       </section>
 
-      <!-- Valeur absolue & Opposé -->
       <section id="valabs" class="card" style="display:none;">
         <h2>Valeur absolue et opposé</h2>
         <div class="question" id="valQ"></div>
         <div class="choices" id="valChoices"></div>
         <p id="valExplain" class="explain"></p>
-        <button class="refresh" onclick="newValAbs()">Nouvel exercice</button>
+        <button class="refresh" onclick="newValAbs(true)">Nouvel exercice</button>
       </section>
 
-      <!-- Addition -->
       <section id="addition" class="card" style="display:none;">
         <h2>Addition de relatifs</h2>
         <div class="question" id="addQ"></div>
         <div class="choices" id="addChoices"></div>
         <p id="addExplain" class="explain"></p>
-        <button class="refresh" onclick="newAddition()">Nouvel exercice</button>
+        <button class="refresh" onclick="newAddition(true)">Nouvel exercice</button>
       </section>
 
-      <!-- Soustraction -->
       <section id="soustraction" class="card" style="display:none;">
         <h2>Soustraction de relatifs</h2>
         <div class="question" id="subQ"></div>
         <div class="choices" id="subChoices"></div>
         <p id="subExplain" class="explain"></p>
-        <button class="refresh" onclick="newSubtraction()">Nouvel exercice</button>
+        <button class="refresh" onclick="newSubtraction(true)">Nouvel exercice</button>
       </section>
 
-      <!-- Multiplication -->
       <section id="multiplication" class="card" style="display:none;">
         <h2>Multiplication de relatifs</h2>
         <div class="question" id="multQ"></div>
         <div class="choices" id="multChoices"></div>
         <p id="multExplain" class="explain"></p>
-        <button class="refresh" onclick="newMultiplication()">Nouvel exercice</button>
+        <button class="refresh" onclick="newMultiplication(true)">Nouvel exercice</button>
       </section>
 
-      <!-- Division -->
       <section id="division" class="card" style="display:none;">
         <h2>Division de relatifs</h2>
         <div class="question" id="divQ"></div>
         <div class="choices" id="divChoices"></div>
         <p id="divExplain" class="explain"></p>
-        <button class="refresh" onclick="newDivision()">Nouvel exercice</button>
+        <button class="refresh" onclick="newDivision(true)">Nouvel exercice</button>
       </section>
     </div>
 
-    <!-- Calculatrice -->
     <div class="calculator">
       <h2>🧮 Calculatrice</h2>
       <input type="text" id="calcDisplay" disabled />
@@ -148,28 +139,23 @@
 
     // Score
     let score=0,total=0;
-    function updateScore(){ document.getElementById('scoreboard').textContent=`Score : ${score}/${total}`; }
+    function updateScore(){ document.getElementById('scoreText').textContent=`Score : ${score}/${total}`; }
     function resetScore(){ score=0; total=0; updateScore(); }
 
     // Niveau
     function getLevel(){ return +document.getElementById('level').value; }
+    document.getElementById('level').addEventListener('change',()=>{ /* nouvelle question au changement de niveau */ generateForCurrent(true); });
 
     // Outils nombres
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-    function typePoolByLevel(level){
-      if(level===1) return ['int'];
-      if(level===2) return ['int','dec'];
-      return ['int','dec','frac']; // niveau 3
-    }
+    function typePoolByLevel(level){ return level===1?['int']:level===2?['int','dec']:['int','dec','frac']; }
     function renderNumber(n){
-      if(typeof n==='object' && n.frac){
-        return `<span class="frac"><span class="num">${n.num}</span><span class="den">${n.den}</span></span>`;
-      }
+      if(typeof n==='object' && n.frac){ return `<span class="frac"><span class="num">${n.num}</span><span class="den">${n.den}</span></span>`; }
       return n<0?`(${n})`:`${n}`;
     }
     function formatNumber(type){
-      if(type==='int'){ return renderNumber(randInt(-20,20)); }
-      if(type==='dec'){ return renderNumber(Math.round((Math.random()*20-10)*10)/10); }
+      if(type==='int') return renderNumber(randInt(-20,20));
+      if(type==='dec') return renderNumber(Math.round((Math.random()*20-10)*10)/10);
       if(type==='frac'){
         let num=randInt(-9,9); if(num===0) num=1;
         let den=[2,4,5,10][randInt(0,3)];
@@ -185,7 +171,7 @@
       return parseFloat(str.replace(/[()]/g,''));
     }
 
-    // QCM
+    // QCM helpers
     function makeChoices(container, correct, wrongs, explainId, explanation){
       container.innerHTML=''; document.getElementById(explainId).textContent='';
       const answers=[correct,...wrongs].sort(()=>Math.random()-0.5);
@@ -193,7 +179,6 @@
         const btn=document.createElement('button'); btn.innerHTML=ans;
         btn.onclick=()=>{
           container.querySelectorAll('button').forEach(b=>b.disabled=true);
-          total++;
           if(ans===correct){ score++; btn.classList.add('correct'); }
           else{ btn.classList.add('wrong'); document.getElementById(explainId).textContent='❌ '+explanation; }
           updateScore();
@@ -202,84 +187,85 @@
       });
     }
 
-    // Modules
-    function newComparison(){
-      const pool=typePoolByLevel(getLevel());
-      const t=pool[randInt(0,pool.length-1)];
-      let a=formatNumber(t), b=formatNumber(t);
-      while(evalFrac(a)===evalFrac(b)) b=formatNumber(t);
+    // Génération par module (count=true => on compte la question posée)
+    function newComparison(count){
+      const pool=typePoolByLevel(getLevel()); const t=pool[randInt(0,pool.length-1)];
+      let a=formatNumber(t), b=formatNumber(t); while(evalFrac(a)===evalFrac(b)) b=formatNumber(t);
       const correct=evalFrac(a)>evalFrac(b)?a:b;
       document.getElementById('compQ').innerHTML=`Quel est le plus grand entre ${a} et ${b} ?`;
-      const exp=`On compare ${evalFrac(a)} et ${evalFrac(b)} : ${correct} est plus grand car sa valeur est la plus élevée.`;
+      const exp=`On compare ${evalFrac(a)} et ${evalFrac(b)} : ${correct} est le plus grand.`;
       makeChoices(document.getElementById('compChoices'),correct,[a,b].filter(x=>x!==correct),'compExplain',exp);
+      if(count){ total++; updateScore(); }
     }
 
-    function newValAbs(){
-      const pool=typePoolByLevel(getLevel());
-      const t=pool[randInt(0,pool.length-1)];
+    function newValAbs(count){
+      const pool=typePoolByLevel(getLevel()); const t=pool[randInt(0,pool.length-1)];
       const n=formatNumber(t);
       if(Math.random()<0.5){
         document.getElementById('valQ').innerHTML=`Valeur absolue de ${n} ?`;
         const c=Math.abs(evalFrac(n)).toString();
-        const exp=`La valeur absolue est la distance à 0 : |${evalFrac(n)}| = ${c}.`;
-        makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+1).toString(),(evalFrac(n)-1).toString() ],'valExplain',exp);
+        const exp=`|${evalFrac(n)}| = ${c}`;
+        makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+1).toString(), (evalFrac(n)-1).toString() ],'valExplain',exp);
       }else{
         document.getElementById('valQ').innerHTML=`Opposé de ${n} ?`;
         const c=(-evalFrac(n)).toString();
-        const exp=`L’opposé de ${evalFrac(n)} est ${c} car leur somme vaut 0.`;
-        makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+2).toString(),(evalFrac(n)-2).toString() ],'valExplain',exp);
+        const exp=`Opposé de ${evalFrac(n)} = ${c}`;
+        makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],'valExplain',exp);
       }
+      if(count){ total++; updateScore(); }
     }
 
-    function newAddition(){
-      const lvl=getLevel(); const pool=typePoolByLevel(lvl);
-      const n = (lvl===1)?2 : (lvl===2?randInt(3,4):randInt(4,5));
+    function newAddition(count){
+      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+      const n=(lvl===1)?2:(lvl===2?randInt(3,4):randInt(4,5));
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
       const res=terms.map(evalFrac).reduce((a,b)=>a+b,0).toFixed(2);
       document.getElementById('addQ').innerHTML=`Calcule : ${terms.join(' + ')}`;
-      const exp=`On additionne terme à terme : ${terms.map(evalFrac).join(' + ')} = ${res}.`;
+      const exp=`On additionne : ${terms.map(evalFrac).join(' + ')} = ${res}`;
       makeChoices(document.getElementById('addChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'addExplain',exp);
+      if(count){ total++; updateScore(); }
     }
 
-    function newSubtraction(){
-      const lvl=getLevel(); const pool=typePoolByLevel(lvl);
-      const n = (lvl===1)?2 : (lvl===2?randInt(3,4):randInt(4,5));
+    function newSubtraction(count){
+      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+      const n=(lvl===1)?2:(lvl===2?randInt(3,4):randInt(4,5));
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
-      let val=evalFrac(terms[0]); for(let i=1;i<terms.length;i++){ val-=evalFrac(terms[i]); }
+      let val=evalFrac(terms[0]); for(let i=1;i<terms.length;i++) val-=evalFrac(terms[i]);
       const res=val.toFixed(2);
       document.getElementById('subQ').innerHTML=`Calcule : ${terms.join(' - ')}`;
-      const exp=`Soustraire = ajouter l’opposé : ${terms[0]} - ${terms[1]} = ${evalFrac(terms[0])} + (${ -evalFrac(terms[1]) }) → résultat final ${res}.`;
+      const exp=`Soustraire = ajouter l’opposé : ${terms[0]} - ${terms[1]} = ${evalFrac(terms[0])} + (${ -evalFrac(terms[1]) }) → ${res}`;
       makeChoices(document.getElementById('subChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'subExplain',exp);
+      if(count){ total++; updateScore(); }
     }
 
-    function newMultiplication(){
-      const lvl=getLevel(); const pool=typePoolByLevel(lvl);
-      const n = (lvl===1)?2:randInt(2,3);
+    function newMultiplication(count){
+      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+      const n=(lvl===1)?2:randInt(2,3);
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
       const res=terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
       const negs=terms.filter(t=>evalFrac(t)<0).length;
       document.getElementById('multQ').innerHTML=`Calcule : ${terms.join(' × ')}`;
-      const exp=`Règle du signe : ${negs} négatif(s) → produit ${negs%2===0?'positif':'négatif'}. Calcul : ${terms.map(evalFrac).join(' × ')} = ${res}.`;
+      const exp=`Règle du signe : ${negs} négatif(s) → produit ${negs%2===0?'positif':'négatif'}. Calcul : ${terms.map(evalFrac).join(' × ')} = ${res}`;
       makeChoices(document.getElementById('multChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'multExplain',exp);
+      if(count){ total++; updateScore(); }
     }
 
-    function newDivision(){
-      const lvl=getLevel(); const pool=typePoolByLevel(lvl);
+    function newDivision(count){
+      const lvl=getLevel(), pool=typePoolByLevel(lvl);
       const a=formatNumber(pool[randInt(0,pool.length-1)]);
-      let b=formatNumber(pool[randInt(0,pool.length-1)]);
-      while(evalFrac(b)===0){ b=formatNumber('int'); } // éviter division par 0
-      const quot=(evalFrac(a)/evalFrac(b));
-      const res=Number.isFinite(quot)?quot.toFixed(2):'NaN';
-      const samesign = (evalFrac(a)>=0 && evalFrac(b)>=0) || (evalFrac(a)<0 && evalFrac(b)<0);
+      let b=formatNumber(pool[randInt(0,pool.length-1)]); while(evalFrac(b)===0) b=formatNumber('int');
+      const q=(evalFrac(a)/evalFrac(b)).toFixed(2);
+      const samesign=(evalFrac(a)>=0&&evalFrac(b)>=0)||(evalFrac(a)<0&&evalFrac(b)<0);
       document.getElementById('divQ').innerHTML=`Calcule : ${a} ÷ ${b}`;
-      const exp=`Règle du signe : ${samesign?'signes identiques → quotient positif':'signes contraires → quotient négatif'}. Calcul : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${res}.`;
-      makeChoices(document.getElementById('divChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'divExplain',exp);
+      const exp=`Règle du signe : ${samesign?'signes identiques → quotient positif':'signes contraires → quotient négatif'}. Calcul : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${q}`;
+      makeChoices(document.getElementById('divChoices'),q,[ (q*1+1).toFixed(2),(q*1-1).toFixed(2) ],'divExplain',exp);
+      if(count){ total++; updateScore(); }
     }
 
     // Calculatrice
-    (function createCalculator(){
+    (function makeCalc(){
       const keys=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
-      const cont=document.getElementById('calcButtons');
+      const box=document.getElementById('calcButtons');
       keys.forEach(k=>{
         const b=document.createElement('button'); b.textContent=k;
         b.onclick=()=>{
@@ -288,22 +274,31 @@
           else if(k==="="){ try{ d.value=eval(d.value); }catch{ d.value="Erreur"; } }
           else d.value+=k;
         };
-        cont.appendChild(b);
+        box.appendChild(b);
       });
     })();
 
-    // Init
-    window.onload=()=>{
-      resetScore();
-      newComparison(); newValAbs(); newAddition(); newSubtraction(); newMultiplication(); newDivision();
-      showSection('comparaison');
-    };
-
-    // Navigation
+    // Navigation : à chaque changement d’onglet → on génère une NOUVELLE question et on COMPTE
+    let current='comparaison';
     function showSection(id){
       document.querySelectorAll('section').forEach(s=>s.style.display='none');
       document.getElementById(id).style.display='block';
+      current=id;
+      generateForCurrent(true);
     }
+    function generateForCurrent(count){
+      if(current==='comparaison') newComparison(count);
+      else if(current==='valabs') newValAbs(count);
+      else if(current==='addition') newAddition(count);
+      else if(current==='soustraction') newSubtraction(count);
+      else if(current==='multiplication') newMultiplication(count);
+      else if(current==='division') newDivision(count);
+    }
+
+    // Démarrage : on affiche Comparer et on compte la 1re question
+    window.onload=()=>{
+      showSection('comparaison'); // génère + compte
+    };
   </script>
 </body>
 </html>
