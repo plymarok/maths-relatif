@@ -122,10 +122,22 @@
       box-shadow: var(--shadow);
     }
     .explain { margin-top: 10px; font-weight: bold; color: var(--explain); }
-    /* Fractions jolies */
-    .frac { display: inline-block; text-align: center; vertical-align: middle; }
-    .frac .num { border-bottom: 1px solid black; display: block; }
-    .frac .den { display: block; }
+
+    /* Fractions jolies avec vrai trait centré */
+    .frac {
+      display: inline-grid;
+      grid-template-rows: auto auto;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .frac .num {
+      border-bottom: 2px solid currentColor; /* Trait toujours visible */
+      padding: 0 4px;
+    }
+    .frac .den {
+      padding: 0 4px;
+    }
+
     /* Calculatrice */
     #calcDisplay {
       width: 100%;
