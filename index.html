@@ -85,6 +85,11 @@
   body.light .numpad button{background:#e2e8f0;color:#000}
   .numpad .danger{background:#ef4444}
   .example{margin-top:14px;padding:12px;border-radius:10px;background:rgba(59,130,246,.12)}
+
+  /* ⚠️ Bouton reset local (panic) */
+  .panic{background:#f59e0b;color:#000;border:none;border-radius:10px;padding:8px 14px;box-shadow:var(--shadow);margin:8px 0}
+  body.light .panic{background:#fbbf24;color:#000}
+  .mini{background:#64748b} /* petit bouton "Effacer" de ligne */
 </style>
 </head>
 <body>
@@ -207,6 +212,9 @@
       <div id="opBar" class="tokenbar"></div>
       <div id="numPad" class="numpad"></div>
 
+      <!-- Bouton reset local (panic) -->
+      <button id="compResetBtn" class="panic" title="Repartir de zéro sans changer l'énoncé">↺ Réinitialiser l’exercice</button>
+
       <div id="compLines"></div>
       <p id="compExplain2" class="explain"></p>
       <div id="compExample" class="example"></div>
@@ -269,7 +277,7 @@ let modeSerie=false, serieTotal=0, serieIndex=0, serieScore=0;
 let currentAnswered=false;
 
 function lockUI(lock){
-  // on NE bloque PAS la difficulté ni son bouton (demande utilisateur)
+  // difficulté toujours active
   document.querySelectorAll('nav button').forEach(b=>b.disabled=lock);
   document.getElementById('numQuestions').disabled=lock;
   document.getElementById('startBtn').disabled=lock;
@@ -480,7 +488,7 @@ function generateComposed(){
   document.getElementById('compExpr').innerHTML = `Calcule : ${htmlOfArray(terms)}<span class="pill">Méthode ${method}</span>`;
   document.getElementById('compExample').innerHTML = composedExampleHTML(method);
 
-  // Lignes attendues (RHS uniquement – ce que l'élève saisit)
+  // Lignes attendues (RHS uniquement)
   let lines=[];
   if(method==='A'){
     lines.push({prompt:`S0 = ?`, expectedRHS:`${renderNumberText(terms[0])}`});
@@ -531,6 +539,19 @@ function generateComposed(){
   renderComposedLines();
   currentAnswered=false; setRefreshLabel(); updateHUD();
 }
+
+/* Reset local (panic) — garde le même énoncé/méthode */
+function resetComposedForm(){
+  if(!compoState) return;
+  compoState.lines.forEach(l=>{
+    l.done=false; l.firstTryOk=null; l.copyMode=false;
+  });
+  compoState.idx=0; compoState.hadMistake=false;
+  document.getElementById('compExplain2').textContent='';
+  renderComposedLines();
+  currentAnswered=false; setRefreshLabel(); updateHUD();
+}
+document.getElementById('compResetBtn').onclick=resetComposedForm;
 
 /* Barres aide : opérateurs et pavé numérique */
 function insertOp(input, op){
@@ -595,14 +616,19 @@ function renderComposedLines(){
     input.value= ln.done ? ln.expectedRHS : '';
     input.disabled = (i>compoState.idx);
     const btn=document.createElement('button'); btn.textContent='Valider';
+    const clr=document.createElement('button'); clr.textContent='Effacer'; clr.className='mini';
     const exp=document.createElement('span'); exp.className='expected';
 
     if(i===compoState.idx && !ln.done){
       buildOpBar(input);
       buildNumPad(input);
+      clr.onclick=()=>{ input.value=''; input.focus(); };
+      clr.disabled=false;
+    }else{
+      clr.disabled=true;
     }
 
-    if(ln.done){ input.disabled=true; btn.disabled=true; exp.textContent='✔'; }
+    if(ln.done){ input.disabled=true; btn.disabled=true; clr.disabled=true; exp.textContent='✔'; }
 
     btn.onclick=()=>{
       if(i!==compoState.idx || input.disabled) return;
@@ -658,6 +684,7 @@ function renderComposedLines(){
     div.appendChild(label);
     div.appendChild(input);
     div.appendChild(btn);
+    div.appendChild(clr);
     div.appendChild(exp);
     wrap.appendChild(div);
   });
@@ -724,7 +751,6 @@ function showSection(id){
 /* ============== Démarrage ============== */
 window.onload=()=>{ 
   applyCalcPlacement();
-  // applique la difficulté mémorisée dès l’ouverture
   document.getElementById('level').value=String(globalLevel);
   showSection('comparaison'); 
 };
