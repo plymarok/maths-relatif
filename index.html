@@ -59,10 +59,10 @@
   #calcButtons button{flex:1 0 22%;padding:12px;font-size:1.1rem;border-radius:10px;border:none;cursor:pointer;background:#475569;color:#fff}
   body.light #calcButtons button{background:#e2e8f0;color:#000}
 
-  /* ➜ Couleurs spéciales */
-  #calcButtons .eqBtn{background:#f59e0b !important;color:#000 !important;} /* jaune */
+  /* ➜ Boutons spéciaux de la calculatrice */
+  #calcButtons .eqBtn{background:#f59e0b !important;color:#000 !important;} /* = jaune */
   body.light #calcButtons .eqBtn{background:#fbbf24 !important;color:#000 !important;}
-  #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;} /* rouge */
+  #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;} /* C rouge */
   body.light #calcButtons .clrBtn{background:#ef4444 !important;color:#fff !important;}
 
   @media (max-width:980px){main:not(.row):not(.column){flex-direction:column}}
@@ -74,6 +74,13 @@
   .line-item .expected{font-size:.95rem;margin-left:8px;color:var(--explain)}
   .line-item.error input{border-color:var(--error)}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#334155;margin-left:6px;font-size:.85rem}
+
+  .tokenbar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .tokenbar button{padding:6px 10px;border:none;border-radius:999px;background:#475569;color:#fff;cursor:pointer}
+  body.light .tokenbar button{background:#e2e8f0;color:#000}
+  .tokenbar .danger{background:#ef4444;color:#fff}
+  .tokenbar .muted{opacity:.8}
+  .example{margin-top:14px;padding:12px;border-radius:10px;background:rgba(59,130,246,.1)}
 </style>
 </head>
 <body>
@@ -189,8 +196,19 @@
         </select>
       </div>
       <div class="question" id="compExpr"></div>
+
+      <!-- Jetons rapides -->
+      <div>
+        <div class="tokenbar" id="tokenExpr"></div>
+        <div class="tokenbar" id="tokenLine"></div>
+      </div>
+
       <div id="compLines"></div>
       <p id="compExplain2" class="explain"></p>
+
+      <!-- Exemple figé selon la méthode -->
+      <div id="compExample" class="example"></div>
+
       <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
     </section>
   </div>
@@ -297,10 +315,7 @@ function renderNumberHTML(n){
   return n<0?`(${n})`:`${n}`;
 }
 function renderNumberText(n){
-  if(typeof n==='object' && n.frac){
-    const s = `${n.num}/${n.den}`;
-    return n.num<0?`(${s})`:`(+${s})`;
-  }
+  if(typeof n==='object' && n.frac){ const s = `${n.num}/${n.den}`; return n.num<0?`(${s})`:`(+${s})`; }
   return n<0?`(${n})`:`(+${n})`;
 }
 function formatNumber(type){
@@ -397,18 +412,86 @@ function newDivision(){
   makeChoices(document.getElementById('divChoices'),q,[ (+q+1).toFixed(2),(+q-1).toFixed(2) ],'divExplain',exp);
 }
 
-/* ============== Calculs composés (ligne par ligne) ============== */
-let compoState=null;
+/* ============== Calculs composés (ligne par ligne + jetons) ============== */
+let compoState=null; // {terms, exprTokens, lines[], idx, hadMistake, method}
+
+function tokensFromExpected(expStr){
+  // découpe simple par espaces (tokens “tapables”)
+  return expStr.split(' ');
+}
+function renderTokens(containerId, tokens, inputEl){
+  const cont=document.getElementById(containerId);
+  cont.innerHTML='';
+  if(!tokens || !tokens.length){ cont.innerHTML='<span class="muted">Aucun jeton</span>'; return; }
+  tokens.forEach(t=>{
+    const b=document.createElement('button'); b.textContent=t;
+    b.onclick=()=>{ 
+      const cur=inputEl.value.trim();
+      inputEl.value = (cur?cur+' ':'') + t; 
+      inputEl.focus();
+    };
+    cont.appendChild(b);
+  });
+  // commandes
+  const back=document.createElement('button'); back.textContent='⌫ Annuler'; back.className='muted';
+  back.onclick=()=>{
+    const arr=inputEl.value.trim().split(' ');
+    arr.pop(); inputEl.value=arr.join(' ');
+    inputEl.focus();
+  };
+  const clr=document.createElement('button'); clr.textContent='Effacer'; clr.className='danger';
+  clr.onclick=()=>{ inputEl.value=''; inputEl.focus(); };
+  cont.appendChild(back); cont.appendChild(clr);
+}
+
+function composedExampleHTML(method){
+  if(method==='A'){
+    return `
+      <strong>Exemple — Méthode A (Sommes partielles)</strong><br/>
+      Énoncé : (+12) + (-8) + (+6) + (-9)<br/>
+      S0 = (+12)<br/>
+      S1 = S0 + (-8) = +4<br/>
+      S2 = S1 + (+6) = +10<br/>
+      S3 = S2 + (-9) = +1
+    `;
+  }
+  if(method==='B'){
+    return `
+      <strong>Exemple — Méthode B (Regrouper + / −)</strong><br/>
+      Énoncé : (+12) + (-8) + (+6) + (-9)<br/>
+      Positifs : (+12) + (+6) = +18<br/>
+      Négatifs : (-8) + (-9) = -17<br/>
+      Sommes : P = +18 ; N = -17<br/>
+      Résultat : P + N = +1
+    `;
+  }
+  return `
+    <strong>Exemple — Méthode C (Paires)</strong><br/>
+    Énoncé : (+12) + (-8) + (+6) + (-9)<br/>
+    Paire 1 : (+12) + (-9) = +3<br/>
+    Paire 2 : (+6) + (-8) = -2<br/>
+    Somme des résultats = +1
+  `;
+}
 
 function generateComposed(){
   const lvl=activeLevel();
   const count = (lvl===1)?randInt(3,4):(lvl===2?randInt(4,5):randInt(5,6));
-  const pool = (lvl===1)?['int']:['int','dec'];
+  const pool = (lvl===1)?['int']:['int','dec']; // (saisie simple)
   const terms = Array.from({length:count},()=>formatNumber(pool[randInt(0,pool.length-1)]));
   const method = document.getElementById('compMethod').value;
 
+  // Énoncé visible (HTML)
   document.getElementById('compExpr').innerHTML = `Calcule : ${htmlOfArray(terms)}<span class="pill">Méthode ${method}</span>`;
 
+  // Jetons de l’énoncé (texte)
+  const exprTokens=[];
+  terms.forEach((t,i)=>{ 
+    if(i>0) exprTokens.push('+'); 
+    exprTokens.push(renderNumberText(t).replace(/\s+/g,' ')); 
+  });
+
+  // Lignes attendues (format texte exact tapable)
   let lines=[];
   if(method==='A'){
     let s = evalNumber(terms[0]);
@@ -438,7 +521,8 @@ function generateComposed(){
       lines.push({prompt:`Paire ${i+1}`, expected:`${renderNumberText(pos[i])} + ${renderNumberText(neg[i])} = ${r}`});
       partials.push(+r);
     }
-    const rest = terms.slice(pairs*2);
+    const used = pairs*2;
+    const rest = terms.slice(used);
     let total = partials.reduce((a,b)=>a+b,0);
     if(rest.length){
       lines.push({prompt:`Reste`, expected:`Reste : ${rest.map(renderNumberText).join(' + ')}`});
@@ -447,7 +531,13 @@ function generateComposed(){
     lines.push({prompt:`Somme`, expected:`Somme des résultats = ${two(total)}`});
   }
 
-  compoState={lines:lines.map(l=>({...l,done:false,firstTryOk:null,copyMode:false})), idx:0, hadMistake:false, method};
+  compoState={
+    terms, exprTokens,
+    lines:lines.map(l=>({...l,done:false,firstTryOk:null,copyMode:false})),
+    idx:0, hadMistake:false, method
+  };
+
+  document.getElementById('compExample').innerHTML = composedExampleHTML(method);
   renderComposedLines();
   currentAnswered=false; setRefreshLabel(); updateHUD();
 }
@@ -455,15 +545,29 @@ function generateComposed(){
 function renderComposedLines(){
   const wrap=document.getElementById('compLines');
   wrap.innerHTML='';
+  const tokenExpr=document.getElementById('tokenExpr');
+  const tokenLine=document.getElementById('tokenLine');
+
   compoState.lines.forEach((ln, i)=>{
     const div=document.createElement('div');
     div.className='line-item'+(ln.firstTryOk===false?' error':'');
     const label=document.createElement('span'); label.textContent=`${ln.prompt}`;
-    const input=document.createElement('input'); input.placeholder='Recopie ta ligne ici…';
+    const input=document.createElement('input'); input.placeholder='Compose ou recopie la ligne ici…';
     input.value= ln.done ? ln.expected : '';
     input.disabled = (i>compoState.idx);
     const btn=document.createElement('button'); btn.textContent='Valider';
     const exp=document.createElement('span'); exp.className='expected';
+
+    // Jetons pour la ligne active
+    if(i===compoState.idx && !ln.done){
+      // Jetons de l’énoncé (toujours proposés)
+      renderTokens('tokenExpr', compoState.exprTokens, input);
+      // Jetons exacts attendus pour cette ligne
+      renderTokens('tokenLine', tokensFromExpected(ln.expected), input);
+    }
+    if(i!==compoState.idx || ln.done){
+      tokenExpr.innerHTML=''; tokenLine.innerHTML='';
+    }
 
     if(ln.done){ input.disabled=true; btn.disabled=true; exp.textContent='✔'; }
 
@@ -474,6 +578,8 @@ function renderComposedLines(){
         if(val===ln.expected){
           ln.done=true; ln.copyMode=false; div.classList.remove('error'); exp.textContent='✔';
           compoState.idx++;
+          // Nettoyage tokens
+          tokenExpr.innerHTML=''; tokenLine.innerHTML='';
           if(compoState.idx>=compoState.lines.length){
             if(modeSerie){
               if(!compoState.hadMistake) serieScore++;
@@ -489,10 +595,12 @@ function renderComposedLines(){
         return;
       }
 
+      // 1ère validation
       if(val===ln.expected){
         ln.done=true; ln.firstTryOk = (ln.firstTryOk===null)?true:ln.firstTryOk;
         exp.textContent='✔';
         compoState.idx++;
+        tokenExpr.innerHTML=''; tokenLine.innerHTML='';
         if(compoState.idx>=compoState.lines.length){
           if(modeSerie){
             if(!compoState.hadMistake) serieScore++;
@@ -503,10 +611,13 @@ function renderComposedLines(){
         }
         renderComposedLines();
       }else{
+        // faux : on affiche la bonne ligne et oblige à recopier
         ln.firstTryOk = false; compoState.hadMistake=true;
         div.classList.add('error');
         exp.textContent = `Réponse attendue : ${ln.expected}`;
         ln.copyMode = true;
+        // On laisse les jetons de la ligne attendue pour reconstituer
+        renderTokens('tokenLine', tokensFromExpected(ln.expected), input);
       }
     };
 
