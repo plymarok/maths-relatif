@@ -27,6 +27,7 @@
   #scoreText{font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.25)}
   #startBtn{background:#10b981;color:#fff}
   #emergencyBtn{background:#ef4444;color:#fff}
+  #confirmLevel{background:#64748b;color:#fff}
 
   nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px}
   nav button{padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
@@ -97,9 +98,10 @@
   <strong>Difficulté :</strong>
   <select id="level">
     <option value="1">Facile</option>
-    <option value="2" selected>Moyen</option>
+    <option value="2">Moyen</option>
     <option value="3">Difficile</option>
   </select>
+  <button id="confirmLevel" title="Appliquer la difficulté">OK</button>
 
   <label>Questions :
     <input id="numQuestions" type="number" min="1" max="50" value="10" style="width:80px;text-align:center"/>
@@ -245,14 +247,30 @@ document.getElementById('calcPos').addEventListener('change',e=>{
 });
 applyCalcPlacement();
 
+/* ============== Difficulté globale (persistante) ============== */
+const levelLabels={1:'Facile',2:'Moyen',3:'Difficile'};
+let globalLevel = +localStorage.getItem('level') || 2;
+document.getElementById('level').value = String(globalLevel);
+
+document.getElementById('confirmLevel').onclick = ()=>{
+  globalLevel = +document.getElementById('level').value;
+  localStorage.setItem('level', String(globalLevel));
+  currentAnswered=false;
+  generateForCurrent(); // relance un exercice dans la section courante
+  setRefreshLabel(); updateHUD();
+  const expId=getExplainId();
+  const p=document.getElementById(expId);
+  if(p){ p.textContent=`Difficulté appliquée : ${levelLabels[globalLevel]}.`; }
+};
+
 /* ============== Série / Score ============== */
 let current='comparaison';
-let modeSerie=false, serieTotal=0, serieIndex=0, serieScore=0, serieLevel=2;
+let modeSerie=false, serieTotal=0, serieIndex=0, serieScore=0;
 let currentAnswered=false;
 
 function lockUI(lock){
+  // on NE bloque PAS la difficulté ni son bouton (demande utilisateur)
   document.querySelectorAll('nav button').forEach(b=>b.disabled=lock);
-  document.getElementById('level').disabled=lock;
   document.getElementById('numQuestions').disabled=lock;
   document.getElementById('startBtn').disabled=lock;
   document.getElementById('emergencyBtn').disabled=!lock;
@@ -291,10 +309,10 @@ function startSerie(){
   if(modeSerie) return;
   const n=clamp(parseInt(document.getElementById('numQuestions').value||'10',10),1,50);
   serieTotal=n; serieIndex=1; serieScore=0;
-  modeSerie=true; serieLevel=+document.getElementById('level').value;
+  modeSerie=true;
   lockUI(true); updateHUD(); generateForCurrent(); setRefreshLabel();
   const exp=document.getElementById(getExplainId());
-  exp.textContent=`Série lancée : ${serieTotal} question(s) — catégorie et options verrouillées jusqu’à la fin.`;
+  exp.textContent=`Série lancée (${serieTotal} question(s)) — catégorie et options verrouillées (sauf difficulté).`;
 }
 document.getElementById('emergencyBtn').onclick = cancelSerie;
 function cancelSerie(){
@@ -332,15 +350,7 @@ function formatNumber(type){
 function htmlOfArray(arr){ return arr.map(renderNumberHTML).join(' + '); }
 function evalNumber(n){ return (typeof n==='object' && n.frac)? n.num/n.den : n; }
 function two(x){ const v=+x; const r= Math.round(v*100)/100; return (Object.is(r,-0)?0:r).toFixed(2); }
-function signedNice(x){ // ex: +4, -3.4 (sans .00)
-  let s=two(x);
-  if(s.endsWith('.00')) s=s.slice(0,-3);
-  if(s.endsWith('0') && s.includes('.')) s=s.replace(/\.?0$/,'');
-  if(+s>0 && !s.startsWith('+')) s='+'+s;
-  if(s==='+0') s='+0';
-  if(s==='-0') s='0';
-  return s;
-}
+function signedNice(x){ let s=two(x); if(s.endsWith('.00')) s=s.slice(0,-3); if(s.endsWith('0')&&s.includes('.')) s=s.replace(/\.?0$/,''); if(+s>0&&!s.startsWith('+')) s='+'+s; if(s==='+0') s='+0'; if(s==='-0') s='0'; return s; }
 function norm(str){ return str.trim().replace(/\s+/g,' '); }
 
 /* ============== QCM commun ============== */
@@ -363,7 +373,7 @@ function makeChoices(container, correct, wrongs, explainId, explanation){
 }
 
 /* ============== Modules QCM (6) ============== */
-function activeLevel(){ return modeSerie ? serieLevel : +document.getElementById('level').value; }
+function activeLevel(){ return globalLevel; }
 
 function newComparison(){
   const pool=typePoolByLevel(activeLevel()); const t=pool[randInt(0,pool.length-1)];
@@ -473,14 +483,12 @@ function generateComposed(){
   // Lignes attendues (RHS uniquement – ce que l'élève saisit)
   let lines=[];
   if(method==='A'){
-    // S0
     lines.push({prompt:`S0 = ?`, expectedRHS:`${renderNumberText(terms[0])}`});
-    // S1... avec cumul numérique
     let sum = evalNumber(terms[0]);
     for(let i=1;i<terms.length;i++){
+      const prev = signedNice(sum);
       sum = +(Math.round((sum + evalNumber(terms[i]))*100)/100);
-      const lhs = (i===1) ? `${renderNumberText(terms[0])}` : `${signedNice(sum - evalNumber(terms[i]))}`;
-      const rhs = `${lhs} + ${renderNumberText(terms[i])} = ${signedNice(sum)}`;
+      const rhs = `${prev} + ${renderNumberText(terms[i])} = ${signedNice(sum)}`;
       lines.push({prompt:`S${i} = ?`, expectedRHS:rhs});
     }
   }else if(method==='B'){
@@ -524,7 +532,7 @@ function generateComposed(){
   currentAnswered=false; setRefreshLabel(); updateHUD();
 }
 
-/* Helpers pavé & opérateurs */
+/* Barres aide : opérateurs et pavé numérique */
 function insertOp(input, op){
   let v=input.value;
   const last=v.slice(-1);
@@ -537,8 +545,7 @@ function insertOp(input, op){
   input.focus();
 }
 function insertNum(input, ch){
-  let v=input.value;
-  input.value = v + ch;
+  input.value = input.value + ch;
   input.focus();
 }
 function buildOpBar(input){
@@ -573,11 +580,10 @@ function buildNumPad(input){
   pad.appendChild(clr);
 }
 
-/* Rendu des lignes */
+/* Rendu des lignes composés */
 function renderComposedLines(){
   const wrap=document.getElementById('compLines');
   wrap.innerHTML='';
-  // Nettoie barres par défaut
   document.getElementById('opBar').innerHTML='';
   document.getElementById('numPad').innerHTML='';
 
@@ -585,7 +591,7 @@ function renderComposedLines(){
     const div=document.createElement('div');
     div.className='line-item'+(ln.firstTryOk===false?' error':'');
     const label=document.createElement('span'); label.textContent=`${ln.prompt}`;
-    const input=document.createElement('input'); input.placeholder='Compose la partie droite (ex : (+12) + (-8) = +4)';
+    const input=document.createElement('input'); input.placeholder='Compose la partie droite, ex : (+12) + (-8) = +4';
     input.value= ln.done ? ln.expectedRHS : '';
     input.disabled = (i>compoState.idx);
     const btn=document.createElement('button'); btn.textContent='Valider';
@@ -644,7 +650,6 @@ function renderComposedLines(){
         div.classList.add('error');
         exp.textContent = `Attendu : ${ln.expectedRHS}`;
         ln.copyMode = true;
-        // garde les barres pour aider la recopie
         buildOpBar(input);
         buildNumPad(input);
       }
@@ -719,6 +724,8 @@ function showSection(id){
 /* ============== Démarrage ============== */
 window.onload=()=>{ 
   applyCalcPlacement();
+  // applique la difficulté mémorisée dès l’ouverture
+  document.getElementById('level').value=String(globalLevel);
   showSection('comparaison'); 
 };
 </script>
