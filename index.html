@@ -20,11 +20,16 @@
     body{margin:0;font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
     header{background:var(--accent);color:#fff;text-align:center;padding:14px 48px;font-size:1.25rem;font-weight:700;position:relative}
     #toggleTheme{position:absolute;right:12px;top:8px;background:#fff;color:#000;border:none;border-radius:999px;font-size:1.05rem;cursor:pointer;padding:6px 10px}
+
+    /* Barre série */
+    #topbar{display:flex;gap:10px;justify-content:center;align-items:center;margin:10px 12px;flex-wrap:wrap}
+    #topbar select,#topbar input,#topbar button{padding:8px 12px;border-radius:10px;border:1px solid transparent;background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+    #scoreText{font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.25)}
+    #startBtn{background:#10b981;color:#fff}
+    #emergencyBtn{background:#ef4444;color:#fff}
+
     nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px}
     nav button{padding:8px 14px;border:none;border-radius:var(--radius);cursor:pointer;background:var(--accent);color:#fff;font-size:1rem;box-shadow:var(--shadow)}
-    #topbar{display:flex;gap:12px;justify-content:center;align-items:center;margin:10px 12px;flex-wrap:wrap}
-    #topbar select,#topbar button{padding:8px 12px;border-radius:10px;border:1px solid transparent;background:var(--card);color:var(--text);box-shadow:var(--shadow)}
-    #scoreText{font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.25)}
     main{display:flex;max-width:1200px;margin:18px auto;gap:20px;padding:0 12px}
     .content{flex:2}
     .calculator{flex:1;background:var(--card);padding:15px;border-radius:var(--radius);box-shadow:var(--shadow);height:fit-content}
@@ -52,6 +57,7 @@
     <button id="toggleTheme" title="Basculer thème">🌙</button>
   </header>
 
+  <!-- Panneau Série / Score -->
   <div id="topbar">
     <strong>Difficulté :</strong>
     <select id="level">
@@ -59,8 +65,15 @@
       <option value="2" selected>Moyen</option>
       <option value="3">Difficile</option>
     </select>
-    <button onclick="resetScore()">🔄 Réinitialiser le score</button>
-    <span id="scoreText">Score : 0/0</span>
+
+    <label>Questions :
+      <input id="numQuestions" type="number" min="1" max="50" value="10" style="width:80px;text-align:center"/>
+    </label>
+
+    <button id="startBtn">▶ Démarrer la série</button>
+    <button id="emergencyBtn" disabled>⚠ Urgence</button>
+
+    <span id="scoreText">Mode libre</span>
   </div>
 
   <nav>
@@ -79,7 +92,7 @@
         <div class="question" id="compQ"></div>
         <div class="choices" id="compChoices"></div>
         <p id="compExplain" class="explain"></p>
-        <button class="refresh" onclick="newComparison(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
 
       <section id="valabs" class="card" style="display:none;">
@@ -87,7 +100,7 @@
         <div class="question" id="valQ"></div>
         <div class="choices" id="valChoices"></div>
         <p id="valExplain" class="explain"></p>
-        <button class="refresh" onclick="newValAbs(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
 
       <section id="addition" class="card" style="display:none;">
@@ -95,7 +108,7 @@
         <div class="question" id="addQ"></div>
         <div class="choices" id="addChoices"></div>
         <p id="addExplain" class="explain"></p>
-        <button class="refresh" onclick="newAddition(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
 
       <section id="soustraction" class="card" style="display:none;">
@@ -103,7 +116,7 @@
         <div class="question" id="subQ"></div>
         <div class="choices" id="subChoices"></div>
         <p id="subExplain" class="explain"></p>
-        <button class="refresh" onclick="newSubtraction(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
 
       <section id="multiplication" class="card" style="display:none;">
@@ -111,7 +124,7 @@
         <div class="question" id="multQ"></div>
         <div class="choices" id="multChoices"></div>
         <p id="multExplain" class="explain"></p>
-        <button class="refresh" onclick="newMultiplication(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
 
       <section id="division" class="card" style="display:none;">
@@ -119,7 +132,7 @@
         <div class="question" id="divQ"></div>
         <div class="choices" id="divChoices"></div>
         <p id="divExplain" class="explain"></p>
-        <button class="refresh" onclick="newDivision(true)">Nouvel exercice</button>
+        <button class="refresh" onclick="handleRefresh()">Nouvel exercice</button>
       </section>
     </div>
 
@@ -131,22 +144,51 @@
   </main>
 
   <script>
-    // Thème
+    // ————— Thème
     document.getElementById('toggleTheme').onclick=()=>{
       document.body.classList.toggle('light');
       document.getElementById('toggleTheme').textContent=document.body.classList.contains('light')?'☀️':'🌙';
     };
 
-    // Score
-    let score=0,total=0;
-    function updateScore(){ document.getElementById('scoreText').textContent=`Score : ${score}/${total}`; }
-    function resetScore(){ score=0; total=0; updateScore(); }
+    // ————— État global
+    let current='comparaison';
+    let modeSerie=false, serieTotal=0, serieIndex=0, serieScore=0, serieModule='', serieLevel=2;
+    let currentAnswered=false;
 
-    // Niveau
-    function getLevel(){ return +document.getElementById('level').value; }
-    document.getElementById('level').addEventListener('change',()=>{ /* nouvelle question au changement de niveau */ generateForCurrent(true); });
+    // ————— Utilitaires UI
+    function lockUI(lock){
+      document.querySelectorAll('nav button').forEach(b=>b.disabled=lock);
+      document.getElementById('level').disabled=lock;
+      document.getElementById('numQuestions').disabled=lock;
+      document.getElementById('startBtn').disabled=lock;
+      document.getElementById('emergencyBtn').disabled=!lock;
+    }
+    function getExplainId(){
+      return current==='comparaison'?'compExplain':
+             current==='valabs'?'valExplain':
+             current==='addition'?'addExplain':
+             current==='soustraction'?'subExplain':
+             current==='multiplication'?'multExplain':'divExplain';
+    }
+    function setRefreshLabel(){
+      const btn=document.querySelector(`#${current} .refresh`);
+      if(!btn) return;
+      if(modeSerie){
+        btn.textContent = (serieIndex<serieTotal) ? `Suivant (${serieIndex}/${serieTotal})` : 'Terminer';
+        btn.disabled = !currentAnswered;
+      }else{
+        btn.textContent='Nouvel exercice';
+        btn.disabled=false;
+      }
+    }
+    function updateHUD(){
+      const text = modeSerie
+        ? `Score : ${serieScore}/${serieTotal} — Q ${serieIndex}/${serieTotal}`
+        : 'Mode libre';
+      document.getElementById('scoreText').textContent=text;
+    }
 
-    // Outils nombres
+    // ————— Générateurs de nombres
     function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function typePoolByLevel(level){ return level===1?['int']:level===2?['int','dec']:['int','dec','frac']; }
     function renderNumber(n){
@@ -156,11 +198,7 @@
     function formatNumber(type){
       if(type==='int') return renderNumber(randInt(-20,20));
       if(type==='dec') return renderNumber(Math.round((Math.random()*20-10)*10)/10);
-      if(type==='frac'){
-        let num=randInt(-9,9); if(num===0) num=1;
-        let den=[2,4,5,10][randInt(0,3)];
-        return renderNumber({frac:true,num,den});
-      }
+      if(type==='frac'){ let num=randInt(-9,9); if(num===0) num=1; let den=[2,4,5,10][randInt(0,3)]; return renderNumber({frac:true,num,den}); }
     }
     function evalFrac(str){
       if(str.includes('frac')){
@@ -170,64 +208,59 @@
       }
       return parseFloat(str.replace(/[()]/g,''));
     }
+    function activeLevel(){ return modeSerie ? serieLevel : +document.getElementById('level').value; }
 
-    // QCM helpers
+    // ————— QCM
     function makeChoices(container, correct, wrongs, explainId, explanation){
       container.innerHTML=''; document.getElementById(explainId).textContent='';
+      currentAnswered=false; setRefreshLabel(); // désactive "Suivant" en série
       const answers=[correct,...wrongs].sort(()=>Math.random()-0.5);
       answers.forEach(ans=>{
         const btn=document.createElement('button'); btn.innerHTML=ans;
         btn.onclick=()=>{
           container.querySelectorAll('button').forEach(b=>b.disabled=true);
-          if(ans===correct){ score++; btn.classList.add('correct'); }
+          if(modeSerie && !currentAnswered && ans===correct){ serieScore++; }
+          currentAnswered=true; setRefreshLabel();
+          if(ans===correct){ btn.classList.add('correct'); }
           else{ btn.classList.add('wrong'); document.getElementById(explainId).textContent='❌ '+explanation; }
-          updateScore();
+          updateHUD();
         };
         container.appendChild(btn);
       });
     }
 
-    // Génération par module (count=true => on compte la question posée)
-    function newComparison(count){
-      const pool=typePoolByLevel(getLevel()); const t=pool[randInt(0,pool.length-1)];
+    // ————— Modules (génération de question)
+    function newComparison(){
+      const pool=typePoolByLevel(activeLevel()); const t=pool[randInt(0,pool.length-1)];
       let a=formatNumber(t), b=formatNumber(t); while(evalFrac(a)===evalFrac(b)) b=formatNumber(t);
       const correct=evalFrac(a)>evalFrac(b)?a:b;
       document.getElementById('compQ').innerHTML=`Quel est le plus grand entre ${a} et ${b} ?`;
       const exp=`On compare ${evalFrac(a)} et ${evalFrac(b)} : ${correct} est le plus grand.`;
       makeChoices(document.getElementById('compChoices'),correct,[a,b].filter(x=>x!==correct),'compExplain',exp);
-      if(count){ total++; updateScore(); }
     }
-
-    function newValAbs(count){
-      const pool=typePoolByLevel(getLevel()); const t=pool[randInt(0,pool.length-1)];
-      const n=formatNumber(t);
+    function newValAbs(){
+      const pool=typePoolByLevel(activeLevel()); const t=pool[randInt(0,pool.length-1)]; const n=formatNumber(t);
       if(Math.random()<0.5){
         document.getElementById('valQ').innerHTML=`Valeur absolue de ${n} ?`;
-        const c=Math.abs(evalFrac(n)).toString();
-        const exp=`|${evalFrac(n)}| = ${c}`;
+        const c=Math.abs(evalFrac(n)).toString(); const exp=`|${evalFrac(n)}| = ${c}`;
         makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+1).toString(), (evalFrac(n)-1).toString() ],'valExplain',exp);
       }else{
         document.getElementById('valQ').innerHTML=`Opposé de ${n} ?`;
-        const c=(-evalFrac(n)).toString();
-        const exp=`Opposé de ${evalFrac(n)} = ${c}`;
+        const c=(-evalFrac(n)).toString(); const exp=`Opposé de ${evalFrac(n)} = ${c}`;
         makeChoices(document.getElementById('valChoices'),c,[ (evalFrac(n)+2).toString(), (evalFrac(n)-2).toString() ],'valExplain',exp);
       }
-      if(count){ total++; updateScore(); }
     }
-
-    function newAddition(count){
-      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+    function newAddition(){
+      const lvl=activeLevel(), pool=typePoolByLevel(lvl);
       const n=(lvl===1)?2:(lvl===2?randInt(3,4):randInt(4,5));
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
       const res=terms.map(evalFrac).reduce((a,b)=>a+b,0).toFixed(2);
       document.getElementById('addQ').innerHTML=`Calcule : ${terms.join(' + ')}`;
       const exp=`On additionne : ${terms.map(evalFrac).join(' + ')} = ${res}`;
       makeChoices(document.getElementById('addChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'addExplain',exp);
-      if(count){ total++; updateScore(); }
     }
-
-    function newSubtraction(count){
-      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+    function newSubtraction(){
+      const lvl=activeLevel(), pool=typePoolByLevel(lvl);
       const n=(lvl===1)?2:(lvl===2?randInt(3,4):randInt(4,5));
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
       let val=evalFrac(terms[0]); for(let i=1;i<terms.length;i++) val-=evalFrac(terms[i]);
@@ -235,11 +268,9 @@
       document.getElementById('subQ').innerHTML=`Calcule : ${terms.join(' - ')}`;
       const exp=`Soustraire = ajouter l’opposé : ${terms[0]} - ${terms[1]} = ${evalFrac(terms[0])} + (${ -evalFrac(terms[1]) }) → ${res}`;
       makeChoices(document.getElementById('subChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'subExplain',exp);
-      if(count){ total++; updateScore(); }
     }
-
-    function newMultiplication(count){
-      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+    function newMultiplication(){
+      const lvl=activeLevel(), pool=typePoolByLevel(lvl);
       const n=(lvl===1)?2:randInt(2,3);
       const terms=Array.from({length:n},()=>formatNumber(pool[randInt(0,pool.length-1)]));
       const res=terms.map(evalFrac).reduce((a,b)=>a*b,1).toFixed(2);
@@ -247,11 +278,9 @@
       document.getElementById('multQ').innerHTML=`Calcule : ${terms.join(' × ')}`;
       const exp=`Règle du signe : ${negs} négatif(s) → produit ${negs%2===0?'positif':'négatif'}. Calcul : ${terms.map(evalFrac).join(' × ')} = ${res}`;
       makeChoices(document.getElementById('multChoices'),res,[ (res*1+1).toFixed(2),(res*1-1).toFixed(2) ],'multExplain',exp);
-      if(count){ total++; updateScore(); }
     }
-
-    function newDivision(count){
-      const lvl=getLevel(), pool=typePoolByLevel(lvl);
+    function newDivision(){
+      const lvl=activeLevel(), pool=typePoolByLevel(lvl);
       const a=formatNumber(pool[randInt(0,pool.length-1)]);
       let b=formatNumber(pool[randInt(0,pool.length-1)]); while(evalFrac(b)===0) b=formatNumber('int');
       const q=(evalFrac(a)/evalFrac(b)).toFixed(2);
@@ -259,10 +288,73 @@
       document.getElementById('divQ').innerHTML=`Calcule : ${a} ÷ ${b}`;
       const exp=`Règle du signe : ${samesign?'signes identiques → quotient positif':'signes contraires → quotient négatif'}. Calcul : ${evalFrac(a)} ÷ ${evalFrac(b)} = ${q}`;
       makeChoices(document.getElementById('divChoices'),q,[ (q*1+1).toFixed(2),(q*1-1).toFixed(2) ],'divExplain',exp);
-      if(count){ total++; updateScore(); }
     }
 
-    // Calculatrice
+    // ————— Gestion “Nouvel exercice / Suivant”
+    function handleRefresh(){
+      if(modeSerie){
+        if(!currentAnswered) return; // on doit répondre avant
+        if(serieIndex < serieTotal){
+          serieIndex++;
+          generateForCurrent();
+          updateHUD();
+        }else{
+          finishSerie();
+        }
+      }else{
+        generateForCurrent();
+      }
+    }
+
+    // ————— Série (start / emergency / finish)
+    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+    document.getElementById('startBtn').onclick = startSerie;
+    function startSerie(){
+      if(modeSerie) return;
+      const n=clamp(parseInt(document.getElementById('numQuestions').value||'10',10),1,50);
+      serieTotal=n; serieIndex=1; serieScore=0;
+      modeSerie=true; serieModule=current; serieLevel=+document.getElementById('level').value;
+      lockUI(true); updateHUD(); generateForCurrent(); setRefreshLabel();
+      // petite info
+      const exp=document.getElementById(getExplainId());
+      exp.textContent=`Série lancée : ${serieTotal} question(s) — catégorie verrouillée jusqu’à la fin.`;
+    }
+
+    document.getElementById('emergencyBtn').onclick = cancelSerie;
+    function cancelSerie(){
+      if(!modeSerie) return;
+      if(!confirm("Annuler l'exercice en cours et tout réinitialiser ?")) return;
+      modeSerie=false; serieTotal=0; serieIndex=0; serieScore=0;
+      lockUI(false); updateHUD(); generateForCurrent(); setRefreshLabel();
+      document.getElementById(getExplainId()).textContent="Série annulée.";
+    }
+
+    function finishSerie(){
+      modeSerie=false; lockUI(false); updateHUD(); setRefreshLabel();
+      const msg=`✅ Série terminée : ${serieScore}/${serieTotal} (${Math.round(100*serieScore/serieTotal)}%)`;
+      document.getElementById(getExplainId()).textContent=msg;
+    }
+
+    // ————— Navigation & génération
+    function generateForCurrent(){
+      if(current==='comparaison') newComparison();
+      else if(current==='valabs') newValAbs();
+      else if(current==='addition') newAddition();
+      else if(current==='soustraction') newSubtraction();
+      else if(current==='multiplication') newMultiplication();
+      else if(current==='division') newDivision();
+      setRefreshLabel(); updateHUD();
+    }
+
+    function showSection(id){
+      document.querySelectorAll('section').forEach(s=>s.style.display='none');
+      document.getElementById(id).style.display='block';
+      current=id;
+      generateForCurrent(); // en mode libre, ne compte pas ; en série, génère la question du module verrouillé
+    }
+
+    // ————— Calculatrice
     (function makeCalc(){
       const keys=["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+","(",")","C"];
       const box=document.getElementById('calcButtons');
@@ -278,27 +370,8 @@
       });
     })();
 
-    // Navigation : à chaque changement d’onglet → on génère une NOUVELLE question et on COMPTE
-    let current='comparaison';
-    function showSection(id){
-      document.querySelectorAll('section').forEach(s=>s.style.display='none');
-      document.getElementById(id).style.display='block';
-      current=id;
-      generateForCurrent(true);
-    }
-    function generateForCurrent(count){
-      if(current==='comparaison') newComparison(count);
-      else if(current==='valabs') newValAbs(count);
-      else if(current==='addition') newAddition(count);
-      else if(current==='soustraction') newSubtraction(count);
-      else if(current==='multiplication') newMultiplication(count);
-      else if(current==='division') newDivision(count);
-    }
-
-    // Démarrage : on affiche Comparer et on compte la 1re question
-    window.onload=()=>{
-      showSection('comparaison'); // génère + compte
-    };
+    // ————— Démarrage
+    window.onload=()=>{ showSection('comparaison'); };
   </script>
 </body>
 </html>
